@@ -21,10 +21,10 @@ header h1{margin:0;font-size:19px}header small{display:block;color:#607077;margi
 <section class="card"><h2>1. Informations générales</h2><div class="content grid">
 <div><label>Nom</label><input id="nom"></div><div><label>Prénom</label><input id="prenom"></div><div><label>Matricule</label><input id="matricule"></div>
 <div><label>Date du service</label><input id="dateService" type="date"></div><div><label>Résidence</label><input id="residence"></div><div><label>JS</label><input id="js"></div>
-<div><label>Heure de PS prévue</label><input id="psPrev" type="time"></div><div><label>Heure de PS réelle</label><input id="psReelle" type="time"></div><div><label>Rlt</label><input id="rlt" placeholder="Rlt reste écrit comme sur le document"></div>
+<div><label>Heure de PS prévue</label><input id="psPrev" type="time"></div><div><label>Heure de PS réelle</label><input id="psReelle" type="time"></div><div><label>Roulement</label><input id="rlt"></div>
 <div><label>Heure de FS prévue</label><input id="fsPrev" type="time"></div><div><label>Heure de FS réelle</label><input id="fsReelle" type="time"></div><div class="checkline"><input id="bs2" type="checkbox"><label for="bs2" style="margin:0">2 BS</label></div>
 </div></section>
-<section class="card"><h2>2. Trains</h2><div class="content"><p class="muted">Nat = nature du train. Choix possible : T ou UM. Rlt n'est pas modifié dans le document.</p><div id="trains"></div></div></section>
+<section class="card"><h2>2. Trains</h2><div class="content"><p class="muted">Nat = nature du train. Choix possible : T ou UM.</p><div id="trains"></div></div></section>
 <section class="card"><h2>3. Régularité</h2><div class="content"><div id="regularites"></div></div></section>
 <section class="card"><h2>4. Observations, anomalies et présence à bord</h2><div class="content two">
 <div><label>Observations du conducteur</label><textarea id="obsConducteur"></textarea><label>Conditions atmosphériques</label><select id="meteo"><option></option><option>RAS</option><option>Pluie</option><option>Neige</option><option>Brouillard</option><option>Vent fort</option><option>Gel / verglas</option><option>Soleil rasant</option><option>Nuit</option><option>Orage</option><option>Forte chaleur</option><option>Autre</option></select></div>
@@ -84,7 +84,7 @@ function buildPrintableHTML(){
  <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Rlt : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
+  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
   <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
   <div class="ref">FRH-F-006 V1</div>
@@ -125,4 +125,5 @@ function generatePDF(){
 function resetForm(){if(confirm('Réinitialiser toutes les cases ?')) document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''})}
 addTrainRows();
 </script>
-</body></html>
+</body>
+</html>
