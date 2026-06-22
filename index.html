@@ -83,6 +83,98 @@ function buildPrintableHTML(){
  </style></head><body>
  <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
+  <br>
+  <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
+  <div class="ref">FRH-F-006 V1</div>
+ </section>
+ <section class="page">
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <div class="split">
+   <div>
+    <table class="regularite"><tr><th colspan="5">Régularité</th></tr><tr><th>Numéro du Train</th><th>Désignation du lieu<br>Gare ou gares encadrantes</th><th>PK ou<br>n° de signal</th><th>Temps Perdu<br>ou Gagné</th><th>Motif du Retard ou de l’Avance</th></tr>${regRowsHTML()}</table>
+    <br><table><tr><th colspan="6">Anomalies</th></tr><tr><th></th><th>Numéro<br>du Train</th><th>N° de<br>l’EM</th><th>Désignation du lieu<br><span class="tiny">Gare ou gares encadrantes / PK ou N° du Signal / Voie</span></th><th>Avis donné à</th></tr><tr><td colspan="5" class="bigcell">${esc(val('anomalies'))}</td></tr></table>
+   </div>
+   <div>
+    <table class="obs"><tr><th colspan="2">Observations du conducteur</th></tr><tr><th style="width:16mm">Numéro du Train</th><td class="bigcell">${esc(val('obsConducteur'))}</td></tr>${Array.from({length:9}).map(()=>'<tr><th></th><td></td></tr>').join('')}</table>
+    <br><table class="meteo"><tr><th style="width:48mm;text-align:left">Conditions atmosphériques :</th><td>${esc(val('meteo'))}</td></tr></table>
+    <br><table class="people"><tr><th colspan="4" style="text-align:left">Personnes à bord du train :</th><th>Signature du<br>Conducteur</th></tr><tr><th style="width:12mm">N°<br>du Train</th><th>NOM Prénom</th><th>Fonction</th><th>Parcours</th><td rowspan="2">${esc(val('signature'))}</td></tr><tr><td colspan="4">${esc(val('personnesBord'))}</td></tr></table>
+   </div>
+  </div>
+  <div class="ref">FRH-F-006 V1</div>
+ </section>
+ <section class="page">
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <table class="sig">${sigRows.map((r,i)=>{const isFirstOfGroup=i===0||sigRows[i-1][0]!==r[0];const groupSize=sigRows.filter(x=>x[0]===r[0]).length;const rub=isFirstOfGroup?`<td class="rub" rowspan="${groupSize}">${esc(r[0])}</td>`:'';return `<tr>${rub}<td class="label">${esc(r[1])}</td><td>${esc(r[2])}</td><td></td><td></td><td></td><td></td></tr>`}).join('')}</table>
+  <div class="blank"></div>
+  <div class="ref">FRH-F-006 V1</div>
+ </section>
+ </body></html>`;
+}
+function generatePDF(){
+ const printable=buildPrintableHTML();
+ const w=window.open('', '_blank');
+ if(!w){alert('La fenêtre PDF a été bloquée. Autorisez les pop-ups puis recommencez.');return;}
+ w.document.open();
+ w.document.write(printable);
+ w.document.close();
+ w.focus();
+ setTimeout(()=>{w.print();},500);
+}
+function resetForm(){if(confirm('Réinitialiser toutes les cases ?')) document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''})}
+addTrainRows();
+</script>
+</body>
+</html><div><label>KVB - Présentation inopinée d'une indication</label><textarea id="kvbInopinee"></textarea></div><div><label>KVB - Autres anomalies</label><textarea id="kvbAutres"></textarea></div>
+</div></section>
+</div>
+<div class="actions"><button class="secondary" onclick="resetForm()">Réinitialiser</button><button class="primary" onclick="generatePDF()">Générer le PDF</button></div>
+<script>
+const esc = v => String(v||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');
+function byId(id){return document.getElementById(id)}
+function val(id){return byId(id)?.value||''}
+function addTrainRows(){
+ const zone=byId('trains');
+ for(let i=1;i<=5;i++){
+  const d=document.createElement('div');d.className='row-block';
+  d.innerHTML=`<div class="row-title">Train ${i}</div><div class="train-grid">
+  <div><label>Train n°</label><input id="t${i}_num"></div><div><label>De</label><input id="t${i}_de"></div><div><label>À</label><input id="t${i}_a"></div><div><label>Via</label><input id="t${i}_via"></div><div><label>Evo dép.</label><input id="t${i}_evoDep"></div><div><label>H dép.</label><input id="t${i}_hDep" type="time"></div>
+  <div><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div><label>Evo arr.</label><input id="t${i}_evoArr"></div><div><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select></div><div><label>EM</label><input id="t${i}_em"></div><div><label>Poste</label><input id="t${i}_poste"></div><div><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre" style="margin:0">Autre Agt</label></div></div>`; zone.appendChild(d);
+ }
+ const r=byId('regularites');
+ for(let i=1;i<=6;i++){
+  const d=document.createElement('div');d.className='row-block';
+  d.innerHTML=`<div class="row-title">Ligne régularité ${i}</div><div class="train-grid">
+  <div><label>N° train</label><input id="r${i}_train"></div><div class="wide"><label>Désignation du lieu</label><input id="r${i}_lieu"></div><div><label>PK / n° signal</label><input id="r${i}_pk"></div><div><label>Temps perdu/gagné</label><input id="r${i}_temps"></div><div class="wide"><label>Motif du retard ou de l'avance</label><input id="r${i}_motif"></div></div>`; r.appendChild(d);
+ }
+}
+function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
+function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
+function checkedBox(id){return byId(id).checked?'☑':'☐'}
+function buildPrintableHTML(){
+ const now=new Date();
+ const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
+ const trainHeaders=['Train n°','De','à','Via','Evo<br>dép.','H dép.','H arr.','Evo arr.','Nat','EM','Poste','Obs','Autre<br>Agt'];
+ const sigRows=[
+  ['Signalisation','Signal éteint :',val('sigEteint')],
+  ['Signalisation','Aspect anormal ou position douteuse :',val('aspectAnormal')],
+  ['Signalisation','Autres anomalies :',val('autresSignal')],
+  ['Répétition des signaux','Indication signal fermé en l’absence de tout signal susceptible d’être répété :',val('repAbsence')],
+  ['Répétition des signaux','Indication signal fermé au franchissement d’un signal ouvert :',val('repOuvert')],
+  ['Répétition des signaux','Indication signal fermé au franchissement d’un signal pris à revers :',val('repRevers')],
+  ['Répétition des signaux','Absence d’indication au franchissement d’un signal normalement répété :',val('repAbsInd')],
+  ['KVB','Panne sol :',val('kvbSol')],
+  ['KVB','Panne engin :',val('kvbEngin')],
+  ['KVB','Présentation inopinée d’une indication :',val('kvbInopinee')],
+  ['KVB','Autres anomalies :',val('kvbAutres')]
+ ];
+ return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service PDF</title><style>
+ @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
+ *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:4mm;font-size:9pt}.generated-footer{position:fixed;left:8mm;right:8mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:11mm;font-size:11pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ </style></head><body>
+ <div class="generated-footer">Généré le ${esc(gen)}</div>
+ <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
   <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
