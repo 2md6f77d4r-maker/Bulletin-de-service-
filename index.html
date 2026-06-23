@@ -431,7 +431,7 @@ button.quick{
 <div class="actions">
   <button class="secondary" onclick="resetForm()">Réinitialiser</button>
   <button class="secondary" onclick="checkBeforePDF()">Vérifier</button>
-  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF</button>
+  <button class="primary" id="pdfBtn" onclick="generatePDFPrintFallback()">Télécharger le PDF</button>
 </div>
 
 <script>
@@ -540,43 +540,91 @@ function pdfFileName(){
  return raw.replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_');
 }
 
-async function generatePDF(){
- const btn=byId('pdfBtn');
- const oldText=btn ? btn.textContent : '';
- if(!window.html2pdf){
-  alert('Le module de téléchargement PDF n’est pas chargé. Vérifie ta connexion internet puis recommence.');
-  return;
+async function waitForPdfLibraries(){
+ const start=Date.now();
+ while(Date.now()-start<8000){
+  if(window.jspdf && window.jspdf.jsPDF && window.html2canvas) return true;
+  await new Promise(resolve=>setTimeout(resolve,120));
  }
+ return false;
+}
+
+function createPdfHolder(){
  const printable=buildPrintableHTML();
  const parsed=new DOMParser().parseFromString(printable,'text/html');
  const style=parsed.querySelector('style')?.textContent || '';
  const body=parsed.body.innerHTML;
  const holder=document.createElement('div');
  holder.id='pdfExportHolder';
- holder.style.position='fixed';
- holder.style.left='-10000px';
- holder.style.top='0';
- holder.style.width='281mm';
- holder.style.background='white';
- holder.innerHTML=`<style>${style}\n#pdfExportHolder{font-family:"Times New Roman",serif;color:#111;background:#fff;}#pdfExportHolder .page{width:281mm;min-height:190mm;padding:0;margin:0;background:#fff;page-break-after:always;break-after:page;}#pdfExportHolder .generated-footer{position:absolute;left:0;bottom:0;}</style>${body}`;
+ holder.innerHTML=`<style>${style}
+ #pdfExportHolder{position:absolute;left:0;top:0;width:297mm;background:#fff;color:#111;z-index:999999;font-family:"Times New Roman",serif;}
+ #pdfExportHolder .generated-footer{position:absolute;left:8mm;bottom:2mm;}
+ #pdfExportHolder .page{width:281mm;height:190mm;min-height:190mm;margin:0;padding:0;background:#fff;overflow:hidden;page-break-after:always;break-after:page;}
+ #pdfExportHolder .page:last-child{page-break-after:auto;break-after:auto;}
+ </style>${body}`;
+ return holder;
+}
+
+async function generatePDF(){
+ const btn=byId('pdfBtn');
+ const oldText=btn ? btn.textContent : '';
+ const ready=await waitForPdfLibraries();
+ if(!ready){
+  generatePDFPrintFallback();
+  return;
+ }
+ const previousScrollX=window.scrollX;
+ const previousScrollY=window.scrollY;
+ const holder=createPdfHolder();
+ const mask=document.createElement('div');
+ mask.id='pdfMask';
+ mask.innerHTML='Préparation du PDF...';
+ mask.style.cssText='position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#1f2a30;';
+ document.body.appendChild(mask);
  document.body.appendChild(holder);
+ window.scrollTo(0,0);
  try{
   if(btn){btn.disabled=true;btn.textContent='Préparation du PDF...';}
-  await html2pdf().set({
-   margin:[8,8,10,8],
-   filename:pdfFileName(),
-   image:{type:'jpeg',quality:0.98},
-   html2canvas:{scale:2,useCORS:true,letterRendering:true,backgroundColor:'#ffffff'},
-   jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},
-   pagebreak:{mode:['css','legacy'],before:[],after:['.page']}
-  }).from(holder).save();
+  await new Promise(resolve=>setTimeout(resolve,300));
+  const { jsPDF } = window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const pages=[...holder.querySelectorAll('.page')];
+  for(let i=0;i<pages.length;i++){
+   if(btn) btn.textContent=`Génération page ${i+1}/${pages.length}...`;
+   const canvas=await html2canvas(pages[i],{
+    scale:2,
+    backgroundColor:'#ffffff',
+    useCORS:true,
+    logging:false,
+    scrollX:0,
+    scrollY:0,
+    windowWidth:holder.scrollWidth,
+    windowHeight:holder.scrollHeight
+   });
+   const imgData=canvas.toDataURL('image/jpeg',0.98);
+   if(i>0) pdf.addPage('a4','landscape');
+   pdf.addImage(imgData,'JPEG',8,8,281,190,undefined,'FAST');
+  }
+  pdf.save(pdfFileName());
  }catch(e){
   console.error(e);
-  alert('Le PDF n’a pas pu être généré automatiquement.');
+  generatePDFPrintFallback();
  }finally{
   holder.remove();
+  mask.remove();
+  window.scrollTo(previousScrollX,previousScrollY);
   if(btn){btn.disabled=false;btn.textContent=oldText;}
  }
+}
+
+function generatePDFPrintFallback(){
+ const printable=buildPrintableHTML();
+ const w=window.open('', '_blank');
+ if(!w){alert('La fenêtre a été bloquée. Autorise les pop-ups puis recommence.');return;}
+ w.document.open();
+ w.document.write(printable.replace('</body>','<script>setTimeout(()=>window.print(),600);<\/script></body>'));
+ w.document.close();
+ w.focus();
 }
 
 function resetForm(){
