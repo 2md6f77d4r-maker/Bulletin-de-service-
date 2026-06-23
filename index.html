@@ -5,61 +5,479 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bulletin de Service - Générateur PDF</title>
 <style>
-:root{--green:#5ec2b8;--dark:#1f2a30;--line:#1f2a30;--bg:#f5f7f8;--card:#fff}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--dark)}
-header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #ddd;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-header h1{margin:0;font-size:19px}header small{display:block;color:#607077;margin-top:3px}.wrap{max-width:1100px;margin:18px auto;padding:0 12px 90px}.card{background:var(--card);border:1px solid #d9e0e0;border-radius:14px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);overflow:hidden}.card h2{margin:0;padding:12px 14px;background:var(--green);font-size:17px;border-bottom:1px solid #333}.content{padding:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}input,select,textarea{width:100%;padding:9px;border:1px solid #b9c4c4;border-radius:9px;font-size:14px;background:white}textarea{min-height:70px;resize:vertical}.muted{font-size:12px;color:#687a80}.row-block{border:1px solid #d0d8d8;border-radius:12px;padding:10px;margin-bottom:10px}.row-title{font-weight:700;margin-bottom:8px}.train-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.train-grid .wide{grid-column:span 2}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;padding:10px 12px;display:flex;gap:10px;justify-content:center;box-shadow:0 -2px 12px rgba(0,0,0,.08)}button{border:0;border-radius:12px;padding:12px 16px;font-weight:700;font-size:15px;cursor:pointer}button.primary{background:var(--dark);color:#fff}button.secondary{background:#e7eeee;color:#1f2a30}.checkline{display:flex;align-items:center;gap:8px}.checkline input{width:auto}.hidden{display:none}
-@media(max-width:800px){.grid,.two{grid-template-columns:1fr}.train-grid{grid-template-columns:repeat(2,1fr)}.train-grid .wide{grid-column:span 2}header h1{font-size:17px}}
+:root{
+  --green:#5ec2b8;
+  --green-dark:#2f9188;
+  --dark:#1f2a30;
+  --line:#d8e3e4;
+  --bg:#eef3f4;
+  --card:#ffffff;
+  --soft:#f7fafb;
+  --danger:#b42318;
+  --warning:#b54708;
+  --ok:#027a48;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(135deg,#eef3f4 0%,#f8fbfb 50%,#e8f4f2 100%);
+  color:var(--dark);
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid #d7e1e2;
+  padding:14px 22px;
+  box-shadow:0 4px 18px rgba(0,0,0,.07);
+}
+.header-inner{
+  max-width:1280px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+header h1{margin:0;font-size:22px;letter-spacing:-.3px}
+header small{display:block;color:#607077;margin-top:4px}
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#e4f7f4;
+  border:1px solid #b6e7df;
+  color:#17645f;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:700;
+  font-size:13px;
+  white-space:nowrap;
+}
+.status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--green-dark);
+}
+.wrap{
+  max-width:1280px;
+  margin:22px auto;
+  padding:0 18px 96px;
+}
+.dashboard{
+  display:grid;
+  grid-template-columns:270px 1fr;
+  gap:18px;
+  align-items:start;
+}
+.sidebar{
+  position:sticky;
+  top:86px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.07);
+}
+.sidebar-title{
+  font-weight:800;
+  margin:4px 4px 12px;
+}
+.progress-wrap{
+  height:10px;
+  background:#e9eff0;
+  border-radius:999px;
+  overflow:hidden;
+  margin:0 4px 14px;
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--green),var(--green-dark));
+  transition:.25s;
+}
+.navbtn{
+  width:100%;
+  text-align:left;
+  border:1px solid transparent;
+  background:#fff;
+  color:var(--dark);
+  border-radius:12px;
+  padding:11px 12px;
+  margin-bottom:7px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+}
+.navbtn:hover,.navbtn.active{
+  background:#edf9f7;
+  border-color:#bfe7e1;
+}
+.badge{
+  font-size:12px;
+  background:#edf1f2;
+  color:#52666b;
+  border-radius:999px;
+  padding:3px 7px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  margin-bottom:16px;
+  box-shadow:0 6px 24px rgba(0,0,0,.06);
+  overflow:hidden;
+}
+.card h2{
+  margin:0;
+  padding:15px 18px;
+  background:linear-gradient(90deg,var(--green),#85d7cf);
+  font-size:18px;
+  border-bottom:1px solid #abd8d3;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.card h2 span{
+  font-size:12px;
+  font-weight:700;
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.8);
+  border-radius:999px;
+  padding:4px 9px;
+}
+.content{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{
+  background:var(--soft);
+  border:1px solid #e1ebec;
+  border-radius:14px;
+  padding:11px;
+}
+label{
+  font-size:13px;
+  font-weight:800;
+  display:block;
+  margin-bottom:6px;
+  color:#27383e;
+}
+input,select,textarea{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid #b9c4c4;
+  border-radius:10px;
+  font-size:15px;
+  background:white;
+  color:#17242a;
+}
+input:focus,select:focus,textarea:focus{
+  outline:3px solid rgba(94,194,184,.22);
+  border-color:var(--green-dark);
+}
+textarea{min-height:84px;resize:vertical}
+.muted{font-size:13px;color:#687a80;margin-top:0}
+.row-block{
+  border:1px solid #d0d8d8;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+  background:#fbfefe;
+}
+.row-title{
+  font-weight:900;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.train-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.train-grid .wide{grid-column:span 2}
+.actions{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:20;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);
+  border-top:1px solid #d7e1e2;
+  padding:12px 16px;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  box-shadow:0 -5px 18px rgba(0,0,0,.08);
+}
+button{
+  border:0;
+  border-radius:13px;
+  padding:12px 17px;
+  font-weight:800;
+  font-size:15px;
+  cursor:pointer;
+}
+button.primary{background:var(--dark);color:#fff}
+button.primary:hover{background:#10191d}
+button.secondary{background:#e7eeee;color:#1f2a30}
+button.secondary:hover{background:#d7e4e4}
+button.quick{
+  background:#e9f7f5;
+  color:#17645f;
+  border:1px solid #b9e7e1;
+  padding:8px 11px;
+  font-size:13px;
+}
+.quickbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:8px 0 0;
+}
+.checkline{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  background:var(--soft);
+  border:1px solid #e1ebec;
+  border-radius:14px;
+  padding:12px;
+}
+.checkline input{width:auto;transform:scale(1.15)}
+.checkline label{margin:0}
+.notice{
+  background:#fff7ed;
+  color:#7c2d12;
+  border:1px solid #fed7aa;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:14px;
+  font-size:14px;
+  display:none;
+}
+.notice.show{display:block}
+.section-tools{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.hidden{display:none}
+@media(max-width:1050px){
+  .dashboard{grid-template-columns:1fr}
+  .sidebar{position:relative;top:auto}
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  .grid,.two{grid-template-columns:1fr}
+  .train-grid{grid-template-columns:repeat(2,1fr)}
+  .train-grid .wide{grid-column:span 2}
+  .header-inner{align-items:flex-start;flex-direction:column}
+}
 </style>
 </head>
 <body>
 <header>
-<h1>Bulletin de Service Agent de Conduite</h1>
-<small>Générateur PDF - FRH-F-006 V1</small>
+  <div class="header-inner">
+    <div>
+      <h1>Bulletin de Service Agent de Conduite</h1>
+      <small>Générateur PDF - FRH-F-006 V1</small>
+    </div>
+    <div class="status-pill"><span class="status-dot"></span><span id="globalCompletion">0 % complété</span></div>
+  </div>
 </header>
+
 <div class="wrap">
-<section class="card"><h2>1. Informations générales</h2><div class="content grid">
-<div><label>Nom</label><input id="nom"></div><div><label>Prénom</label><input id="prenom"></div><div><label>Matricule</label><input id="matricule"></div>
-<div><label>Date du service</label><input id="dateService" type="date"></div><div><label>Résidence</label><input id="residence"></div><div><label>JS</label><input id="js"></div>
-<div><label>Heure de PS prévue</label><input id="psPrev" type="time"></div><div><label>Heure de PS réelle</label><input id="psReelle" type="time"></div><div><label>Roulement</label><input id="rlt"></div>
-<div><label>Heure de FS prévue</label><input id="fsPrev" type="time"></div><div><label>Heure de FS réelle</label><input id="fsReelle" type="time"></div><div class="checkline"><input id="bs2" type="checkbox"><label for="bs2" style="margin:0">2 BS</label></div>
-</div></section>
-<section class="card"><h2>2. Trains</h2><div class="content"><p class="muted">Nat = nature du train. Choix possible : T ou UM.</p><div id="trains"></div></div></section>
-<section class="card"><h2>3. Régularité</h2><div class="content"><div id="regularites"></div></div></section>
-<section class="card"><h2>4. Observations, anomalies et présence à bord</h2><div class="content two">
-<div><label>Observations du conducteur</label><textarea id="obsConducteur"></textarea><label>Conditions atmosphériques</label><select id="meteo"><option></option><option>RAS</option><option>Pluie</option><option>Neige</option><option>Brouillard</option><option>Vent fort</option><option>Gel / verglas</option><option>Soleil rasant</option><option>Nuit</option><option>Orage</option><option>Forte chaleur</option><option>Autre</option></select></div>
-<div><label>Personnes à bord du train</label><textarea id="personnesBord" placeholder="N° train / Nom prénom / Fonction / Parcours"></textarea><label>Signature du conducteur</label><input id="signature"></div>
-</div><div class="content"><label>Anomalies matériel / voie / signal</label><textarea id="anomalies"></textarea></div></section>
-<section class="card"><h2>5. Signalisation - Répétition des signaux - KVB</h2><div class="content grid">
-<div><label>Signal éteint</label><textarea id="sigEteint"></textarea></div><div><label>Aspect anormal ou position douteuse</label><textarea id="aspectAnormal"></textarea></div><div><label>Autres anomalies signalisation</label><textarea id="autresSignal"></textarea></div>
-<div><label>Indication signal fermé en l'absence de tout signal susceptible d'être répété</label><textarea id="repAbsence"></textarea></div><div><label>Indication signal fermé au franchissement d'un signal ouvert</label><textarea id="repOuvert"></textarea></div><div><label>Indication signal fermé au franchissement d'un signal pris à revers</label><textarea id="repRevers"></textarea></div>
-<div><label>Absence d'indication au franchissement d'un signal normalement répété</label><textarea id="repAbsInd"></textarea></div><div><label>KVB - Panne sol</label><textarea id="kvbSol"></textarea></div><div><label>KVB - Panne engin</label><textarea id="kvbEngin"></textarea></div>
-<div><label>KVB - Présentation inopinée d'une indication</label><textarea id="kvbInopinee"></textarea></div><div><label>KVB - Autres anomalies</label><textarea id="kvbAutres"></textarea></div>
-</div></section>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-title">Navigation</div>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <button class="navbtn active" onclick="scrollToSection('infos')">Informations <span class="badge" id="bInfos">0/13</span></button>
+      <button class="navbtn" onclick="scrollToSection('trainsCard')">Trains <span class="badge" id="bTrains">0/5</span></button>
+      <button class="navbtn" onclick="scrollToSection('regulariteCard')">Régularité <span class="badge" id="bReg">0/6</span></button>
+      <button class="navbtn" onclick="scrollToSection('obsCard')">Observations <span class="badge" id="bObs">0/5</span></button>
+      <button class="navbtn" onclick="scrollToSection('signalCard')">Signalisation / KVB <span class="badge" id="bSig">0/11</span></button>
+    </aside>
+
+    <main>
+      <div class="notice" id="notice"></div>
+
+      <section class="card" id="infos">
+        <h2>1. Informations générales <span id="infosCount">0/13</span></h2>
+        <div class="content grid">
+          <div class="field"><label>Nom</label><input id="nom"></div>
+          <div class="field"><label>Prénom</label><input id="prenom"></div>
+          <div class="field"><label>Matricule</label><input id="matricule"></div>
+          <div class="field"><label>Date du service</label><input id="dateService" type="date"></div>
+          <div class="field"><label>Date de fin de service</label><input id="dateFinService" type="date"></div>
+          <div class="field"><label>Résidence</label><input id="residence"></div>
+          <div class="field"><label>JS</label><input id="js"></div>
+          <div class="field"><label>Heure de PS prévue</label><input id="psPrev" type="time"></div>
+          <div class="field"><label>Heure de PS réelle</label><input id="psReelle" type="time"></div>
+          <div class="field"><label>Roulement</label><input id="rlt"></div>
+          <div class="field"><label>Heure de FS prévue</label><input id="fsPrev" type="time"></div>
+          <div class="field"><label>Heure de FS réelle</label><input id="fsReelle" type="time"></div>
+          <div class="checkline"><input id="bs2" type="checkbox"><label for="bs2">2 BS</label></div>
+        </div>
+      </section>
+
+      <section class="card" id="trainsCard">
+        <h2>2. Trains <span id="trainsCount">0/5</span></h2>
+        <div class="content">
+          <p class="muted">Nat = nature du train. Choix possible : T ou UM. Le rendu PDF reste identique.</p>
+          <div class="section-tools">
+            <button class="quick" onclick="showNextTrain()">Afficher un train supplémentaire</button>
+            <button class="quick" onclick="showAllTrains()">Afficher les 5 trains</button>
+          </div>
+          <div id="trains"></div>
+        </div>
+      </section>
+
+      <section class="card" id="regulariteCard">
+        <h2>3. Régularité <span id="regulariteCount">0/6</span></h2>
+        <div class="content">
+          <div class="section-tools">
+            <button class="quick" onclick="showNextRegularite()">Afficher une ligne supplémentaire</button>
+            <button class="quick" onclick="showAllRegularites()">Afficher les 6 lignes</button>
+          </div>
+          <div id="regularites"></div>
+        </div>
+      </section>
+
+      <section class="card" id="obsCard">
+        <h2>4. Observations, anomalies et présence à bord <span id="obsCount">0/5</span></h2>
+        <div class="content two">
+          <div>
+            <div class="field">
+              <label>Observations du conducteur</label>
+              <textarea id="obsConducteur"></textarea>
+            </div>
+            <br>
+            <div class="field">
+              <label>Conditions atmosphériques</label>
+              <select id="meteo">
+                <option></option>
+                <option>Soleil</option>
+                <option>Soleil rasant</option>
+                <option>Pluie</option>
+                <option>Neige</option>
+                <option>Brouillard</option>
+                <option>Vent fort</option>
+                <option>Orage</option>
+                <option>Gel / verglas</option>
+                <option>Nuit</option>
+                <option>Forte chaleur</option>
+                <option>Autre</option>
+              </select>
+              <div class="quickbar">
+                <button class="quick" onclick="setValue('meteo','Soleil')">Soleil</button>
+                <button class="quick" onclick="setValue('meteo','Soleil rasant')">Soleil rasant</button>
+                <button class="quick" onclick="setValue('meteo','Pluie')">Pluie</button>
+                <button class="quick" onclick="setValue('meteo','Neige')">Neige</button>
+                <button class="quick" onclick="setValue('meteo','Brouillard')">Brouillard</button>
+                <button class="quick" onclick="setValue('meteo','Vent fort')">Vent fort</button>
+                <button class="quick" onclick="setValue('meteo','Orage')">Orage</button>
+                <button class="quick" onclick="setValue('meteo','Gel / verglas')">Gel / verglas</button>
+                <button class="quick" onclick="setValue('meteo','Nuit')">Nuit</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <label>Personnes à bord du train</label>
+              <textarea id="personnesBord" placeholder="N° train / Nom prénom / Fonction / Parcours"></textarea>
+            </div>
+            <br>
+            <div class="field">
+              <label>Signature du conducteur</label>
+              <input id="signature">
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="field">
+            <label>Anomalies matériel / voie / signal</label>
+            <textarea id="anomalies"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="signalCard">
+        <h2>5. Signalisation - Répétition des signaux - KVB <span id="signalCount">0/11</span></h2>
+        <div class="content grid">
+          <div class="field"><label>Signal éteint</label><textarea id="sigEteint"></textarea></div>
+          <div class="field"><label>Aspect anormal ou position douteuse</label><textarea id="aspectAnormal"></textarea></div>
+          <div class="field"><label>Autres anomalies signalisation</label><textarea id="autresSignal"></textarea></div>
+          <div class="field"><label>Indication signal fermé en l'absence de tout signal susceptible d'être répété</label><textarea id="repAbsence"></textarea></div>
+          <div class="field"><label>Indication signal fermé au franchissement d'un signal ouvert</label><textarea id="repOuvert"></textarea></div>
+          <div class="field"><label>Indication signal fermé au franchissement d'un signal pris à revers</label><textarea id="repRevers"></textarea></div>
+          <div class="field"><label>Absence d'indication au franchissement d'un signal normalement répété</label><textarea id="repAbsInd"></textarea></div>
+          <div class="field"><label>KVB - Panne sol</label><textarea id="kvbSol"></textarea></div>
+          <div class="field"><label>KVB - Panne engin</label><textarea id="kvbEngin"></textarea></div>
+          <div class="field"><label>KVB - Présentation inopinée d'une indication</label><textarea id="kvbInopinee"></textarea></div>
+          <div class="field"><label>KVB - Autres anomalies</label><textarea id="kvbAutres"></textarea></div>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
-<div class="actions"><button class="secondary" onclick="resetForm()">Réinitialiser</button><button class="primary" onclick="generatePDF()">Générer le PDF</button></div>
+
+<div class="actions">
+  <button class="secondary" onclick="resetForm()">Réinitialiser</button>
+  <button class="secondary" onclick="checkBeforePDF()">Vérifier</button>
+  <button class="primary" onclick="generatePDF()">Générer le PDF</button>
+</div>
+
 <script>
 const esc = v => String(v||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');
 function byId(id){return document.getElementById(id)}
 function val(id){return byId(id)?.value||''}
+function setValue(id,value){byId(id).value=value; updateCompletion();}
+
 function addTrainRows(){
  const zone=byId('trains');
  for(let i=1;i<=5;i++){
-  const d=document.createElement('div');d.className='row-block';
-  d.innerHTML=`<div class="row-title">Train ${i}</div><div class="train-grid">
-  <div><label>Train n°</label><input id="t${i}_num"></div><div><label>De</label><input id="t${i}_de"></div><div><label>À</label><input id="t${i}_a"></div><div><label>Via</label><input id="t${i}_via"></div><div><label>Evo dép.</label><input id="t${i}_evoDep"></div><div><label>H dép.</label><input id="t${i}_hDep" type="time"></div>
-  <div><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div><label>Evo arr.</label><input id="t${i}_evoArr"></div><div><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select></div><div><label>EM</label><input id="t${i}_em"></div><div><label>Poste</label><input id="t${i}_poste"></div><div><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre" style="margin:0">Autre Agt</label></div></div>`; zone.appendChild(d);
+  const d=document.createElement('div');
+  d.className='row-block train-block';
+  if(i>1)d.classList.add('hidden');
+  d.dataset.index=i;
+  d.innerHTML=`<div class="row-title">Train ${i}<span class="badge" id="trainBadge${i}">vide</span></div><div class="train-grid">
+  <div class="field"><label>Train n°</label><input id="t${i}_num"></div><div class="field"><label>De</label><input id="t${i}_de"></div><div class="field"><label>À</label><input id="t${i}_a"></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep"></div><div class="field"><label>H dép.</label><input id="t${i}_hDep" type="time"></div>
+  <div class="field"><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr"></div><div class="field"><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM</label><input id="t${i}_em"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
+  zone.appendChild(d);
  }
  const r=byId('regularites');
  for(let i=1;i<=6;i++){
-  const d=document.createElement('div');d.className='row-block';
-  d.innerHTML=`<div class="row-title">Ligne régularité ${i}</div><div class="train-grid">
-  <div><label>N° train</label><input id="r${i}_train"></div><div class="wide"><label>Désignation du lieu</label><input id="r${i}_lieu"></div><div><label>PK / n° signal</label><input id="r${i}_pk"></div><div><label>Temps perdu/gagné</label><input id="r${i}_temps"></div><div class="wide"><label>Motif du retard ou de l'avance</label><input id="r${i}_motif"></div></div>`; r.appendChild(d);
+  const d=document.createElement('div');
+  d.className='row-block regularite-block';
+  if(i>1)d.classList.add('hidden');
+  d.dataset.index=i;
+  d.innerHTML=`<div class="row-title">Ligne régularité ${i}<span class="badge" id="regBadge${i}">vide</span></div><div class="train-grid">
+  <div class="field"><label>N° train</label><input id="r${i}_train"></div><div class="field wide"><label>Désignation du lieu</label><input id="r${i}_lieu"></div><div class="field"><label>PK / n° signal</label><input id="r${i}_pk"></div><div class="field"><label>Temps perdu/gagné</label><input id="r${i}_temps"></div><div class="field wide"><label>Motif du retard ou de l'avance</label><input id="r${i}_motif"></div></div>`;
+  r.appendChild(d);
  }
 }
+
+function showNextTrain(){
+ const hidden=[...document.querySelectorAll('.train-block.hidden')][0];
+ if(hidden) hidden.classList.remove('hidden');
+}
+function showAllTrains(){document.querySelectorAll('.train-block').forEach(e=>e.classList.remove('hidden'))}
+function showNextRegularite(){
+ const hidden=[...document.querySelectorAll('.regularite-block.hidden')][0];
+ if(hidden) hidden.classList.remove('hidden');
+}
+function showAllRegularites(){document.querySelectorAll('.regularite-block').forEach(e=>e.classList.remove('hidden'))}
+
 function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
 function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
 function checkedBox(id){return byId(id).checked?'☑':'☐'}
+
 function buildPrintableHTML(){
  const now=new Date();
  const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
@@ -84,7 +502,7 @@ function buildPrintableHTML(){
  <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
+  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}<br>Date de fin de service : ${esc(val('dateFinService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
   <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
   <div class="ref">FRH-F-006 V1</div>
@@ -112,6 +530,7 @@ function buildPrintableHTML(){
  </section>
  </body></html>`;
 }
+
 function generatePDF(){
  const printable=buildPrintableHTML();
  const w=window.open('', '_blank');
@@ -122,100 +541,71 @@ function generatePDF(){
  w.focus();
  setTimeout(()=>{w.print();},500);
 }
-function resetForm(){if(confirm('Réinitialiser toutes les cases ?')) document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''})}
-addTrainRows();
-</script>
-</body>
-</html><div><label>KVB - Présentation inopinée d'une indication</label><textarea id="kvbInopinee"></textarea></div><div><label>KVB - Autres anomalies</label><textarea id="kvbAutres"></textarea></div>
-</div></section>
-</div>
-<div class="actions"><button class="secondary" onclick="resetForm()">Réinitialiser</button><button class="primary" onclick="generatePDF()">Générer le PDF</button></div>
-<script>
-const esc = v => String(v||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');
-function byId(id){return document.getElementById(id)}
-function val(id){return byId(id)?.value||''}
-function addTrainRows(){
- const zone=byId('trains');
- for(let i=1;i<=5;i++){
-  const d=document.createElement('div');d.className='row-block';
-  d.innerHTML=`<div class="row-title">Train ${i}</div><div class="train-grid">
-  <div><label>Train n°</label><input id="t${i}_num"></div><div><label>De</label><input id="t${i}_de"></div><div><label>À</label><input id="t${i}_a"></div><div><label>Via</label><input id="t${i}_via"></div><div><label>Evo dép.</label><input id="t${i}_evoDep"></div><div><label>H dép.</label><input id="t${i}_hDep" type="time"></div>
-  <div><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div><label>Evo arr.</label><input id="t${i}_evoArr"></div><div><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select></div><div><label>EM</label><input id="t${i}_em"></div><div><label>Poste</label><input id="t${i}_poste"></div><div><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre" style="margin:0">Autre Agt</label></div></div>`; zone.appendChild(d);
- }
- const r=byId('regularites');
- for(let i=1;i<=6;i++){
-  const d=document.createElement('div');d.className='row-block';
-  d.innerHTML=`<div class="row-title">Ligne régularité ${i}</div><div class="train-grid">
-  <div><label>N° train</label><input id="r${i}_train"></div><div class="wide"><label>Désignation du lieu</label><input id="r${i}_lieu"></div><div><label>PK / n° signal</label><input id="r${i}_pk"></div><div><label>Temps perdu/gagné</label><input id="r${i}_temps"></div><div class="wide"><label>Motif du retard ou de l'avance</label><input id="r${i}_motif"></div></div>`; r.appendChild(d);
+
+function resetForm(){
+ if(confirm('Réinitialiser toutes les cases ?')){
+  document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''});
+  document.querySelectorAll('.train-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
+  document.querySelectorAll('.regularite-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
+  updateCompletion();
  }
 }
-function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
-function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
-function checkedBox(id){return byId(id).checked?'☑':'☐'}
-function buildPrintableHTML(){
- const now=new Date();
- const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
- const trainHeaders=['Train n°','De','à','Via','Evo<br>dép.','H dép.','H arr.','Evo arr.','Nat','EM','Poste','Obs','Autre<br>Agt'];
- const sigRows=[
-  ['Signalisation','Signal éteint :',val('sigEteint')],
-  ['Signalisation','Aspect anormal ou position douteuse :',val('aspectAnormal')],
-  ['Signalisation','Autres anomalies :',val('autresSignal')],
-  ['Répétition des signaux','Indication signal fermé en l’absence de tout signal susceptible d’être répété :',val('repAbsence')],
-  ['Répétition des signaux','Indication signal fermé au franchissement d’un signal ouvert :',val('repOuvert')],
-  ['Répétition des signaux','Indication signal fermé au franchissement d’un signal pris à revers :',val('repRevers')],
-  ['Répétition des signaux','Absence d’indication au franchissement d’un signal normalement répété :',val('repAbsInd')],
-  ['KVB','Panne sol :',val('kvbSol')],
-  ['KVB','Panne engin :',val('kvbEngin')],
-  ['KVB','Présentation inopinée d’une indication :',val('kvbInopinee')],
-  ['KVB','Autres anomalies :',val('kvbAutres')]
- ];
- return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service PDF</title><style>
- @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
- *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:4mm;font-size:9pt}.generated-footer{position:fixed;left:8mm;right:8mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:11mm;font-size:11pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
- </style></head><body>
- <div class="generated-footer">Généré le ${esc(gen)}</div>
- <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
-  <br>
-  <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
-  <div class="ref">FRH-F-006 V1</div>
- </section>
- <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <div class="split">
-   <div>
-    <table class="regularite"><tr><th colspan="5">Régularité</th></tr><tr><th>Numéro du Train</th><th>Désignation du lieu<br>Gare ou gares encadrantes</th><th>PK ou<br>n° de signal</th><th>Temps Perdu<br>ou Gagné</th><th>Motif du Retard ou de l’Avance</th></tr>${regRowsHTML()}</table>
-    <br><table><tr><th colspan="6">Anomalies</th></tr><tr><th></th><th>Numéro<br>du Train</th><th>N° de<br>l’EM</th><th>Désignation du lieu<br><span class="tiny">Gare ou gares encadrantes / PK ou N° du Signal / Voie</span></th><th>Avis donné à</th></tr><tr><td colspan="5" class="bigcell">${esc(val('anomalies'))}</td></tr></table>
-   </div>
-   <div>
-    <table class="obs"><tr><th colspan="2">Observations du conducteur</th></tr><tr><th style="width:16mm">Numéro du Train</th><td class="bigcell">${esc(val('obsConducteur'))}</td></tr>${Array.from({length:9}).map(()=>'<tr><th></th><td></td></tr>').join('')}</table>
-    <br><table class="meteo"><tr><th style="width:48mm;text-align:left">Conditions atmosphériques :</th><td>${esc(val('meteo'))}</td></tr></table>
-    <br><table class="people"><tr><th colspan="4" style="text-align:left">Personnes à bord du train :</th><th>Signature du<br>Conducteur</th></tr><tr><th style="width:12mm">N°<br>du Train</th><th>NOM Prénom</th><th>Fonction</th><th>Parcours</th><td rowspan="2">${esc(val('signature'))}</td></tr><tr><td colspan="4">${esc(val('personnesBord'))}</td></tr></table>
-   </div>
-  </div>
-  <div class="ref">FRH-F-006 V1</div>
- </section>
- <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <table class="sig">${sigRows.map((r,i)=>{const isFirstOfGroup=i===0||sigRows[i-1][0]!==r[0];const groupSize=sigRows.filter(x=>x[0]===r[0]).length;const rub=isFirstOfGroup?`<td class="rub" rowspan="${groupSize}">${esc(r[0])}</td>`:'';return `<tr>${rub}<td class="label">${esc(r[1])}</td><td>${esc(r[2])}</td><td></td><td></td><td></td><td></td></tr>`}).join('')}</table>
-  <div class="blank"></div>
-  <div class="ref">FRH-F-006 V1</div>
- </section>
- </body></html>`;
+
+function filled(ids){return ids.filter(id=>String(val(id)).trim()!=='').length}
+function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
+function regFilled(i){return [`r${i}_train`,`r${i}_lieu`,`r${i}_pk`,`r${i}_temps`,`r${i}_motif`].some(id=>String(val(id)).trim()!=='')}
+function updateCompletion(){
+ const infoIds=['nom','prenom','matricule','dateService','dateFinService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle'];
+ const infos=filled(infoIds)+(byId('bs2').checked?1:0);
+ const trains=Array.from({length:5},(_,i)=>trainFilled(i+1)).filter(Boolean).length;
+ const regs=Array.from({length:6},(_,i)=>regFilled(i+1)).filter(Boolean).length;
+ const obs=filled(['obsConducteur','meteo','personnesBord','signature','anomalies']);
+ const sig=filled(['sigEteint','aspectAnormal','autresSignal','repAbsence','repOuvert','repRevers','repAbsInd','kvbSol','kvbEngin','kvbInopinee','kvbAutres']);
+
+ byId('infosCount').textContent=`${infos}/13`; byId('bInfos').textContent=`${infos}/13`;
+ byId('trainsCount').textContent=`${trains}/5`; byId('bTrains').textContent=`${trains}/5`;
+ byId('regulariteCount').textContent=`${regs}/6`; byId('bReg').textContent=`${regs}/6`;
+ byId('obsCount').textContent=`${obs}/5`; byId('bObs').textContent=`${obs}/5`;
+ byId('signalCount').textContent=`${sig}/11`; byId('bSig').textContent=`${sig}/11`;
+
+ for(let i=1;i<=5;i++) byId(`trainBadge${i}`).textContent=trainFilled(i)?'rempli':'vide';
+ for(let i=1;i<=6;i++) byId(`regBadge${i}`).textContent=regFilled(i)?'rempli':'vide';
+
+ const percent=Math.round(((infos/13)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
+ byId('progressBar').style.width=percent+'%';
+ byId('globalCompletion').textContent=percent+' % complété';
 }
-function generatePDF(){
- const printable=buildPrintableHTML();
- const w=window.open('', '_blank');
- if(!w){alert('La fenêtre PDF a été bloquée. Autorisez les pop-ups puis recommencez.');return;}
- w.document.open();
- w.document.write(printable);
- w.document.close();
- w.focus();
- setTimeout(()=>{w.print();},500);
+
+function checkBeforePDF(){
+ const missing=[];
+ if(!val('nom'))missing.push('Nom');
+ if(!val('prenom'))missing.push('Prénom');
+ if(!val('dateService'))missing.push('Date du service');
+ if(!val('dateFinService'))missing.push('Date de fin de service');
+ if(!val('psPrev'))missing.push('Heure de PS prévue');
+ if(!val('fsPrev'))missing.push('Heure de FS prévue');
+ const notice=byId('notice');
+ if(missing.length){
+  notice.innerHTML='Champs importants non renseignés : '+missing.join(', ')+'. Tu peux quand même générer le PDF si nécessaire.';
+  notice.classList.add('show');
+  notice.scrollIntoView({behavior:'smooth',block:'start'});
+ }else{
+  notice.innerHTML='Les informations principales sont renseignées.';
+  notice.classList.add('show');
+  notice.scrollIntoView({behavior:'smooth',block:'start'});
+ }
 }
-function resetForm(){if(confirm('Réinitialiser toutes les cases ?')) document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''})}
+
+function scrollToSection(id){
+ document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+ event.currentTarget.classList.add('active');
+}
+
 addTrainRows();
+document.addEventListener('input', updateCompletion);
+document.addEventListener('change', updateCompletion);
+updateCompletion();
 </script>
 </body>
 </html>
