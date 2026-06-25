@@ -298,7 +298,7 @@ button.quick{
     <aside class="sidebar">
       <div class="sidebar-title">Navigation</div>
       <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
-      <button class="navbtn active" onclick="scrollToSection('infos')">Informations <span class="badge" id="bInfos">0/13</span></button>
+      <button class="navbtn active" onclick="scrollToSection('infos')">Informations <span class="badge" id="bInfos">0/12</span></button>
       <button class="navbtn" onclick="scrollToSection('trainsCard')">Trains <span class="badge" id="bTrains">0/5</span></button>
       <button class="navbtn" onclick="scrollToSection('regulariteCard')">Régularité <span class="badge" id="bReg">0/6</span></button>
       <button class="navbtn" onclick="scrollToSection('obsCard')">Observations <span class="badge" id="bObs">0/5</span></button>
@@ -309,13 +309,12 @@ button.quick{
       <div class="notice" id="notice"></div>
 
       <section class="card" id="infos">
-        <h2>1. Informations générales <span id="infosCount">0/13</span></h2>
+        <h2>1. Informations générales <span id="infosCount">0/12</span></h2>
         <div class="content grid">
           <div class="field"><label>Nom</label><input id="nom"></div>
           <div class="field"><label>Prénom</label><input id="prenom"></div>
           <div class="field"><label>Matricule</label><input id="matricule"></div>
           <div class="field"><label>Date du service</label><input id="dateService" type="date"></div>
-          <div class="field"><label>Date de fin de service</label><input id="dateFinService" type="date"></div>
           <div class="field"><label>Résidence</label><input id="residence"></div>
           <div class="field"><label>JS</label><input id="js"></div>
           <div class="field"><label>Heure de PS prévue</label><input id="psPrev" type="time"></div>
@@ -503,7 +502,7 @@ function buildPrintableHTML(){
  <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
-  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}<br>Date de fin de service : ${esc(val('dateFinService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
+  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
   <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
   <div class="ref">FRH-F-006 V1</div>
@@ -640,14 +639,14 @@ function filled(ids){return ids.filter(id=>String(val(id)).trim()!=='').length}
 function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
 function regFilled(i){return [`r${i}_train`,`r${i}_lieu`,`r${i}_pk`,`r${i}_temps`,`r${i}_motif`].some(id=>String(val(id)).trim()!=='')}
 function updateCompletion(){
- const infoIds=['nom','prenom','matricule','dateService','dateFinService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle'];
+ const infoIds=['nom','prenom','matricule','dateService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle'];
  const infos=filled(infoIds)+(byId('bs2').checked?1:0);
  const trains=Array.from({length:5},(_,i)=>trainFilled(i+1)).filter(Boolean).length;
  const regs=Array.from({length:6},(_,i)=>regFilled(i+1)).filter(Boolean).length;
  const obs=filled(['obsConducteur','meteo','personnesBord','signature','anomalies']);
  const sig=filled(['sigEteint','aspectAnormal','autresSignal','repAbsence','repOuvert','repRevers','repAbsInd','kvbSol','kvbEngin','kvbInopinee','kvbAutres']);
 
- byId('infosCount').textContent=`${infos}/13`; byId('bInfos').textContent=`${infos}/13`;
+ byId('infosCount').textContent=`${infos}/12`; byId('bInfos').textContent=`${infos}/12`;
  byId('trainsCount').textContent=`${trains}/5`; byId('bTrains').textContent=`${trains}/5`;
  byId('regulariteCount').textContent=`${regs}/6`; byId('bReg').textContent=`${regs}/6`;
  byId('obsCount').textContent=`${obs}/5`; byId('bObs').textContent=`${obs}/5`;
@@ -656,7 +655,7 @@ function updateCompletion(){
  for(let i=1;i<=5;i++) byId(`trainBadge${i}`).textContent=trainFilled(i)?'rempli':'vide';
  for(let i=1;i<=6;i++) byId(`regBadge${i}`).textContent=regFilled(i)?'rempli':'vide';
 
- const percent=Math.round(((infos/13)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
+ const percent=Math.round(((infos/12)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
  byId('progressBar').style.width=percent+'%';
  byId('globalCompletion').textContent=percent+' % complété';
 }
@@ -666,7 +665,6 @@ function checkBeforePDF(){
  if(!val('nom'))missing.push('Nom');
  if(!val('prenom'))missing.push('Prénom');
  if(!val('dateService'))missing.push('Date du service');
- if(!val('dateFinService'))missing.push('Date de fin de service');
  if(!val('psPrev'))missing.push('Heure de PS prévue');
  if(!val('fsPrev'))missing.push('Heure de FS prévue');
  const notice=byId('notice');
