@@ -287,7 +287,7 @@ button.quick{
   <div class="header-inner">
     <div>
       <h1>Bulletin de Service Agent de Conduite</h1>
-      <small> RDCN-F-007 V3</small>
+      <small> RDCN-F-008 V3</small>
     </div>
     <div class="status-pill"><span class="status-dot"></span><span id="globalCompletion">0 % complété</span></div>
   </div>
@@ -448,7 +448,7 @@ function addTrainRows(){
   d.dataset.index=i;
   d.innerHTML=`<div class="row-title">Train ${i}<span class="badge" id="trainBadge${i}">vide</span></div><div class="train-grid">
   <div class="field"><label>Train n°</label><input id="t${i}_num"></div><div class="field"><label>De</label><input id="t${i}_de"></div><div class="field"><label>À</label><input id="t${i}_a"></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep"></div><div class="field"><label>H dép.</label><input id="t${i}_hDep" type="time"></div>
-  <div class="field"><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr"></div><div class="field"><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM</label><input id="t${i}_em"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
+  <div class="field"><label>H arr.</label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr"></div><div class="field"><label>Nat</label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM</label><input id="t${i}_em"></div><div class="field"><label>Code de composition</label><input id="t${i}_codeCompo"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
   zone.appendChild(d);
  }
  const r=byId('regularites');
@@ -474,14 +474,14 @@ function showNextRegularite(){
 }
 function showAllRegularites(){document.querySelectorAll('.regularite-block').forEach(e=>e.classList.remove('hidden'))}
 
-function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
+function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_codeCompo`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
 function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
 function checkedBox(id){return byId(id).checked?'☑':'☐'}
 
 function buildPrintableHTML(){
  const now=new Date();
  const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
- const trainHeaders=['Train n°','De','à','Via','Evo<br>dép.','H dép.','H arr.','Evo arr.','Nat','EM','Poste','Obs','Autre<br>Agt'];
+ const trainHeaders=['Train n°','De','à','Via','Evo<br>dép.','H dép.','H arr.','Evo arr.','Nat','EM','Code<br>composition','Poste','Obs','Autre<br>Agt'];
  const sigRows=[
   ['Signalisation','Signal éteint :',val('sigEteint')],
   ['Signalisation','Aspect anormal ou position douteuse :',val('aspectAnormal')],
@@ -564,7 +564,36 @@ function createPdfHolder(){
  return holder;
 }
 
+function getPdfBlockingMissingFields(){
+ const missing=[];
+ if(!val('nom').trim()) missing.push('Nom');
+ if(!val('prenom').trim()) missing.push('Prénom');
+ if(!val('dateService').trim()) missing.push('Date du service');
+ if(!val('meteo').trim()) missing.push('Conditions atmosphériques');
+ return missing;
+}
+
+function showPdfBlockedMessage(missing){
+ const notice=byId('notice');
+ notice.innerHTML='Génération du PDF bloquée : les champs obligatoires suivants ne sont pas renseignés : '+missing.join(', ')+'. Merci de compléter ces informations avant de télécharger le PDF.';
+ notice.classList.add('show');
+ notice.style.background='#fef3f2';
+ notice.style.color='#7a271a';
+ notice.style.borderColor='#fecdca';
+ notice.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function clearNoticeStyle(){
+ const notice=byId('notice');
+ notice.style.background='';
+ notice.style.color='';
+ notice.style.borderColor='';
+}
+
 async function generatePDF(){
+ const blockingMissing=getPdfBlockingMissingFields();
+ if(blockingMissing.length){showPdfBlockedMessage(blockingMissing);return;}
+ clearNoticeStyle();
  const btn=byId('pdfBtn');
  const oldText=btn ? btn.textContent : '';
  const ready=await waitForPdfLibraries();
@@ -617,6 +646,9 @@ async function generatePDF(){
 }
 
 function generatePDFPrintFallback(){
+ const blockingMissing=getPdfBlockingMissingFields();
+ if(blockingMissing.length){showPdfBlockedMessage(blockingMissing);return;}
+ clearNoticeStyle();
  const printable=buildPrintableHTML();
  const w=window.open('', '_blank');
  if(!w){alert('La fenêtre a été bloquée. Autorise les pop-ups puis recommence.');return;}
@@ -636,7 +668,7 @@ function resetForm(){
 }
 
 function filled(ids){return ids.filter(id=>String(val(id)).trim()!=='').length}
-function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
+function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_codeCompo`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
 function regFilled(i){return [`r${i}_train`,`r${i}_lieu`,`r${i}_pk`,`r${i}_temps`,`r${i}_motif`].some(id=>String(val(id)).trim()!=='')}
 function updateCompletion(){
  const infoIds=['nom','prenom','matricule','dateService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle'];
@@ -661,19 +693,21 @@ function updateCompletion(){
 }
 
 function checkBeforePDF(){
+ const blockingMissing=getPdfBlockingMissingFields();
  const missing=[];
- if(!val('nom'))missing.push('Nom');
- if(!val('prenom'))missing.push('Prénom');
- if(!val('dateService'))missing.push('Date du service');
  if(!val('psPrev'))missing.push('Heure de PS prévue');
  if(!val('fsPrev'))missing.push('Heure de FS prévue');
  const notice=byId('notice');
- if(missing.length){
-  notice.innerHTML='Champs importants non renseignés : '+missing.join(', ')+'. Tu peux quand même générer le PDF si nécessaire.';
+ if(blockingMissing.length){
+  showPdfBlockedMessage(blockingMissing);
+ }else if(missing.length){
+  clearNoticeStyle();
+  notice.innerHTML='Champs importants non renseignés : '+missing.join(', ')+'. Le PDF peut être généré, mais il est conseillé de compléter ces informations.';
   notice.classList.add('show');
   notice.scrollIntoView({behavior:'smooth',block:'start'});
  }else{
-  notice.innerHTML='Les informations principales sont renseignées.';
+  clearNoticeStyle();
+  notice.innerHTML='Les informations principales sont renseignées. La génération du PDF est autorisée.';
   notice.classList.add('show');
   notice.scrollIntoView({behavior:'smooth',block:'start'});
  }
