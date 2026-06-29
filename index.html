@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -430,7 +431,7 @@ button.quick{
 <div class="actions">
   <button class="secondary" onclick="resetForm()">Réinitialiser</button>
   <button class="secondary" onclick="checkBeforePDF()">Vérifier</button>
-  <button class="primary" id="pdfBtn" onclick="generatePDFPrintFallback()">Télécharger le PDF</button>
+  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF</button>
 </div>
 
 <script>
@@ -478,6 +479,18 @@ function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(va
 function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
 function checkedBox(id){return byId(id).checked?'☑':'☐'}
 
+function serviceDateFR(){
+ const d=val('dateService').trim();
+ if(!d) return '';
+ const parts=d.split('-');
+ if(parts.length===3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+ return d;
+}
+
+function agentFullName(){
+ return [val('nom').trim(), val('prenom').trim()].filter(Boolean).join(' ');
+}
+
 function buildPrintableHTML(){
  const now=new Date();
  const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
@@ -495,20 +508,20 @@ function buildPrintableHTML(){
   ['KVB','Présentation inopinée d’une indication :',val('kvbInopinee')],
   ['KVB','Autres anomalies :',val('kvbAutres')]
  ];
- return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service PDF</title><style>
+ return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service - ${esc(serviceDateFR())} - ${esc(agentFullName())}</title><style>
  @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
- *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:4mm;font-size:9pt}.generated-footer{position:fixed;left:8mm;right:8mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:11mm;font-size:11pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:4mm;font-size:9pt}.generated-footer{position:fixed;left:8mm;right:8mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:11mm;font-size:11pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
  </style></head><body>
  <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())}</div></div><div></div></div>
   <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
   <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
   <div class="ref">FRH-F-006 V1</div>
  </section>
  <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())}</div></div><div></div></div>
   <div class="split">
    <div>
     <table class="regularite"><tr><th colspan="5">Régularité</th></tr><tr><th>Numéro du Train</th><th>Désignation du lieu<br>Gare ou gares encadrantes</th><th>PK ou<br>n° de signal</th><th>Temps Perdu<br>ou Gagné</th><th>Motif du Retard ou de l’Avance</th></tr>${regRowsHTML()}</table>
@@ -523,7 +536,7 @@ function buildPrintableHTML(){
   <div class="ref">FRH-F-006 V1</div>
  </section>
  <section class="page">
-  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div class="title">Bulletin de Service Agent de Conduite.</div><div></div></div>
+  <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())}</div></div><div></div></div>
   <table class="sig">${sigRows.map((r,i)=>{const isFirstOfGroup=i===0||sigRows[i-1][0]!==r[0];const groupSize=sigRows.filter(x=>x[0]===r[0]).length;const rub=isFirstOfGroup?`<td class="rub" rowspan="${groupSize}">${esc(r[0])}</td>`:'';return `<tr>${rub}<td class="label">${esc(r[1])}</td><td>${esc(r[2])}</td><td></td><td></td><td></td><td></td></tr>`}).join('')}</table>
   <div class="blank"></div>
   <div class="ref">FRH-F-006 V1</div>
@@ -533,11 +546,13 @@ function buildPrintableHTML(){
 
 function pdfFileName(){
  const nom=val('nom').trim()||'Agent';
- const prenom=val('prenom').trim()||'';
+ const prenom=val('prenom').trim();
  const date=val('dateService').trim()||new Date().toISOString().slice(0,10);
- const raw=`Bulletin_Service_${nom}_${prenom}_${date}.pdf`;
- return raw.replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_');
+ const agent=[nom, prenom].filter(Boolean).join('_');
+ const raw=`${date}_Bulletin_Service_${agent}.pdf`;
+ return raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_');
 }
+
 
 async function waitForPdfLibraries(){
  const start=Date.now();
