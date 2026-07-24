@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -299,7 +300,7 @@ button.quick{
     <aside class="sidebar">
       <div class="sidebar-title">Navigation</div>
       <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
-      <button class="navbtn active" onclick="scrollToSection('infos')">Informations <span class="badge" id="bInfos">0/12</span></button>
+      <button class="navbtn active" onclick="scrollToSection('infos')">Informations <span class="badge" id="bInfos">0/14</span></button>
       <button class="navbtn" onclick="scrollToSection('trainsCard')">Trains <span class="badge" id="bTrains">0/5</span></button>
       <button class="navbtn" onclick="scrollToSection('regulariteCard')">Régularité <span class="badge" id="bReg">0/6</span></button>
       <button class="navbtn" onclick="scrollToSection('obsCard')">Observations <span class="badge" id="bObs">0/5</span></button>
@@ -310,7 +311,7 @@ button.quick{
       <div class="notice" id="notice"></div>
 
       <section class="card" id="infos">
-        <h2>1. Informations générales <span id="infosCount">0/12</span></h2>
+        <h2>1. Informations générales <span id="infosCount">0/14</span></h2>
         <div class="content grid">
           <div class="field"><label>Nom</label><input id="nom"></div>
           <div class="field"><label>Prénom</label><input id="prenom"></div>
@@ -323,7 +324,9 @@ button.quick{
           <div class="field"><label>Roulement</label><input id="rlt"></div>
           <div class="field"><label>Heure de FS prévue</label><input id="fsPrev" type="time"></div>
           <div class="field"><label>Heure de FS réelle</label><input id="fsReelle" type="time"></div>
+          <div class="field"><label>Temps de coupure</label><input id="coupure" type="time" step="60" title="Durée de la coupure au format heures et minutes"></div>
           <div class="checkline"><input id="bs2" type="checkbox"><label for="bs2">2 BS</label></div>
+          <div class="checkline"><input id="rhr" type="checkbox"><label for="rhr">RHR</label></div>
         </div>
       </section>
 
@@ -6553,6 +6556,62 @@ function agentFullName(){
  return [val('nom').trim(), val('prenom').trim()].filter(Boolean).join(' ');
 }
 
+function timeToMinutes(value){
+ const match=String(value||'').trim().match(/^(\d{1,2}):(\d{2})$/);
+ if(!match) return null;
+ const hours=Number(match[1]),minutes=Number(match[2]);
+ if(hours<0||hours>23||minutes<0||minutes>59) return null;
+ return hours*60+minutes;
+}
+
+function durationToMinutes(value){
+ const match=String(value||'').trim().match(/^(\d{1,3}):(\d{2})$/);
+ if(!match) return 0;
+ const hours=Number(match[1]),minutes=Number(match[2]);
+ if(hours<0||minutes<0||minutes>59) return 0;
+ return hours*60+minutes;
+}
+
+function formatDuration(minutes){
+ if(minutes==null||!Number.isFinite(minutes)) return 'Non calculable';
+ const safe=Math.max(0,Math.round(minutes));
+ return `${Math.floor(safe/60)}h${String(safe%60).padStart(2,'0')}`;
+}
+
+function nightMinutesBetween(start,end){
+ let total=0;
+ // Une plage de nuit commence chaque jour à 22h00 et se termine le lendemain à 07h00.
+ for(let day=-1;day<=2;day++){
+  const nightStart=day*1440+22*60;
+  const nightEnd=(day+1)*1440+7*60;
+  total+=Math.max(0,Math.min(end,nightEnd)-Math.max(start,nightStart));
+ }
+ return total;
+}
+
+function calculateServiceTimes(){
+ const ps=timeToMinutes(val('psReelle'));
+ const fsClock=timeToMinutes(val('fsReelle'));
+ const breakMinutes=durationToMinutes(val('coupure'));
+ if(ps==null||fsClock==null){
+  return {amplitude:null,breakMinutes,effective:null,night:null};
+ }
+ // Une FS antérieure à la PS est considérée comme une fin le lendemain.
+ const fs=fsClock<ps?fsClock+1440:fsClock;
+ const amplitude=fs-ps;
+ return {
+  amplitude,
+  breakMinutes,
+  effective:Math.max(0,amplitude-breakMinutes),
+  night:nightMinutesBetween(ps,fs)
+ };
+}
+
+function serviceFooterHTML(generatedAt){
+ const times=calculateServiceTimes();
+ return `<div class="generated-footer">Généré le ${esc(generatedAt)} &nbsp; · &nbsp; Amplitude PS réelle–FS réelle : ${esc(formatDuration(times.amplitude))} &nbsp; · &nbsp; Coupure : ${esc(formatDuration(times.breakMinutes))} &nbsp; · &nbsp; Travail effectif : ${esc(formatDuration(times.effective))} &nbsp; · &nbsp; Heures de nuit 22h00–07h00 : ${esc(formatDuration(times.night))}</div>`;
+}
+
 function buildPrintableHTML(){
  const now=new Date();
  const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
@@ -6572,14 +6631,14 @@ function buildPrintableHTML(){
  ];
  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service - ${esc(serviceDateFR())} - ${esc(agentFullName())} - ${esc(val('matricule'))} - JS ${esc(val('js'))}</title><style>
  @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
- *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:4mm;font-size:9pt}.generated-footer{position:fixed;left:8mm;right:8mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:11mm;font-size:11pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555;white-space:nowrap}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
  </style></head><body>
- <div class="generated-footer">Généré le ${esc(gen)}</div>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())} &nbsp; - &nbsp; Matricule : ${esc(val('matricule'))} &nbsp; - &nbsp; JS : ${esc(val('js'))}</div></div><div></div></div>
-  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))} &nbsp;&nbsp;&nbsp; 2 BS ${checkedBox('bs2')}</td></tr></table>
+  <table class="topbox"><tr><td>Nom : ${esc(val('nom'))}</td><td>Date : ${esc(val('dateService'))}</td><td>Résidence : ${esc(val('residence'))}</td></tr><tr><td>Prénom : ${esc(val('prenom'))}</td><td>Heure de PS prévue : ${esc(val('psPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('psReelle'))}</td><td>JS : ${esc(val('js'))}</td></tr><tr><td>Matricule : ${esc(val('matricule'))}</td><td>Heure de FS prévue : ${esc(val('fsPrev'))} &nbsp;&nbsp; Réelle : ${esc(val('fsReelle'))}</td><td>Roulement : ${esc(val('rlt'))}</td></tr><tr><td>RHR ${checkedBox('rhr')}</td><td>Temps de coupure : ${esc(val('coupure')||'00:00')}</td><td>2 BS ${checkedBox('bs2')}</td></tr></table>
   <br>
   <table class="trains"><tr>${trainHeaders.map(x=>`<th>${x}</th>`).join('')}</tr>${trainRowsHTML()}</table>
+  ${serviceFooterHTML(gen)}
   <div class="ref">FRH-F-006 V1</div>
  </section>
  <section class="page">
@@ -6595,12 +6654,14 @@ function buildPrintableHTML(){
     <br><table class="people"><tr><th colspan="4" style="text-align:left">Personnes à bord du train :</th><th>Signature du<br>Conducteur</th></tr><tr><th style="width:12mm">N°<br>du Train</th><th>NOM Prénom</th><th>Fonction</th><th>Parcours</th><td rowspan="2">${esc(val('signature'))}</td></tr><tr><td colspan="4">${esc(val('personnesBord'))}</td></tr></table>
    </div>
   </div>
+  ${serviceFooterHTML(gen)}
   <div class="ref">FRH-F-006 V1</div>
  </section>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())} &nbsp; - &nbsp; Matricule : ${esc(val('matricule'))} &nbsp; - &nbsp; JS : ${esc(val('js'))}</div></div><div></div></div>
   <table class="sig">${sigRows.map((r,i)=>{const isFirstOfGroup=i===0||sigRows[i-1][0]!==r[0];const groupSize=sigRows.filter(x=>x[0]===r[0]).length;const rub=isFirstOfGroup?`<td class="rub" rowspan="${groupSize}">${esc(r[0])}</td>`:'';return `<tr>${rub}<td class="label">${esc(r[1])}</td><td>${esc(r[2])}</td><td></td><td></td><td></td><td></td></tr>`}).join('')}</table>
   <div class="blank"></div>
+  ${serviceFooterHTML(gen)}
   <div class="ref">FRH-F-006 V1</div>
  </section>
  </body></html>`;
@@ -6636,7 +6697,7 @@ function createPdfHolder(){
  holder.id='pdfExportHolder';
  holder.innerHTML=`<style>${style}
  #pdfExportHolder{position:absolute;left:0;top:0;width:297mm;background:#fff;color:#111;z-index:999999;font-family:"Times New Roman",serif;}
- #pdfExportHolder .generated-footer{position:absolute;left:8mm;bottom:2mm;}
+ #pdfExportHolder .generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;}
  #pdfExportHolder .page{width:281mm;height:190mm;min-height:190mm;margin:0;padding:0;background:#fff;overflow:hidden;page-break-after:always;break-after:page;}
  #pdfExportHolder .page:last-child{page-break-after:auto;break-after:auto;}
  </style>${body}`;
@@ -6750,14 +6811,14 @@ function filled(ids){return ids.filter(id=>String(val(id)).trim()!=='').length}
 function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_codeCompo`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
 function regFilled(i){return [`r${i}_train`,`r${i}_lieu`,`r${i}_pk`,`r${i}_temps`,`r${i}_motif`].some(id=>String(val(id)).trim()!=='')}
 function updateCompletion(){
- const infoIds=['nom','prenom','matricule','dateService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle'];
- const infos=filled(infoIds)+(byId('bs2').checked?1:0);
+ const infoIds=['nom','prenom','matricule','dateService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle','coupure'];
+ const infos=filled(infoIds)+(byId('bs2').checked?1:0)+(byId('rhr').checked?1:0);
  const trains=Array.from({length:5},(_,i)=>trainFilled(i+1)).filter(Boolean).length;
  const regs=Array.from({length:6},(_,i)=>regFilled(i+1)).filter(Boolean).length;
  const obs=filled(['obsConducteur','meteo','personnesBord','signature','anomalies']);
  const sig=filled(['sigEteint','aspectAnormal','autresSignal','repAbsence','repOuvert','repRevers','repAbsInd','kvbSol','kvbEngin','kvbInopinee','kvbAutres']);
 
- byId('infosCount').textContent=`${infos}/12`; byId('bInfos').textContent=`${infos}/12`;
+ byId('infosCount').textContent=`${infos}/14`; byId('bInfos').textContent=`${infos}/14`;
  byId('trainsCount').textContent=`${trains}/5`; byId('bTrains').textContent=`${trains}/5`;
  byId('regulariteCount').textContent=`${regs}/6`; byId('bReg').textContent=`${regs}/6`;
  byId('obsCount').textContent=`${obs}/5`; byId('bObs').textContent=`${obs}/5`;
@@ -6766,7 +6827,7 @@ function updateCompletion(){
  for(let i=1;i<=5;i++) byId(`trainBadge${i}`).textContent=trainFilled(i)?'rempli':'vide';
  for(let i=1;i<=6;i++) byId(`regBadge${i}`).textContent=regFilled(i)?'rempli':'vide';
 
- const percent=Math.round(((infos/12)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
+ const percent=Math.round(((infos/14)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
  byId('progressBar').style.width=percent+'%';
  byId('globalCompletion').textContent=percent+' % complété';
 }
