@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6556,6 +6557,26 @@ function agentFullName(){
  return [val('nom').trim(), val('prenom').trim()].filter(Boolean).join(' ');
 }
 
+function pdfBaseFileName(){
+ const nom=val('nom').trim()||'Agent';
+ const prenom=val('prenom').trim();
+ const matricule=val('matricule').trim()||'Matricule';
+ const js=val('js').trim()||'JS';
+ const dateService=val('dateService').trim();
+ const dateParts=dateService.split('-');
+ const date=dateParts.length===3
+  ? `${dateParts[2]}_${dateParts[1]}_${dateParts[0]}`
+  : new Date().toLocaleDateString('fr-FR').replace(/\//g,'_');
+ const agent=[nom,prenom].filter(Boolean).join(' ');
+ const raw=`Bulletin de Service - ${date} - ${agent} - ${matricule} - JS ${js}`;
+ return raw
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'')
+  .replace(/[\/:*?"<>|]+/g,'_')
+  .replace(/\s+/g,' ')
+  .trim();
+}
+
 function timeToMinutes(value){
  const match=String(value||'').trim().match(/^(\d{1,2}):(\d{2})$/);
  if(!match) return null;
@@ -6629,7 +6650,7 @@ function buildPrintableHTML(){
   ['KVB','Présentation inopinée d’une indication :',val('kvbInopinee')],
   ['KVB','Autres anomalies :',val('kvbAutres')]
  ];
- return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulletin de Service - ${esc(serviceDateFR())} - ${esc(agentFullName())} - ${esc(val('matricule'))} - JS ${esc(val('js'))}</title><style>
+ return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(pdfBaseFileName())}</title><style>
  @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
  *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555;white-space:nowrap}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
  </style></head><body>
@@ -6668,14 +6689,7 @@ function buildPrintableHTML(){
 }
 
 function pdfFileName(){
- const nom=val('nom').trim()||'Agent';
- const prenom=val('prenom').trim();
- const date=val('dateService').trim()||new Date().toISOString().slice(0,10);
- const js=val('js').trim()||'JS';
- const matricule=val('matricule').trim()||'Matricule';
- const agent=[nom, prenom].filter(Boolean).join('_');
- const raw=`${date}_Bulletin_Service_${agent}_${matricule}_${js}.pdf`;
- return raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_');
+ return `${pdfBaseFileName()}.pdf`;
 }
 
 
@@ -6795,6 +6809,7 @@ function generatePDFPrintFallback(){
  w.document.open();
  w.document.write(printable.replace('</body>','<script>setTimeout(()=>window.print(),600);<\/script></body>'));
  w.document.close();
+ w.document.title=pdfBaseFileName();
  w.focus();
 }
 
