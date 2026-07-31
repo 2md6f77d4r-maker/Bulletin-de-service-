@@ -6829,6 +6829,7 @@ async function renderPdfPages(holder){
  for(let index=0;index<sourcePages.length;index++){
   const isolatedHolder=document.createElement('div');
   isolatedHolder.id='pdfExportHolder';
+  isolatedHolder.style.cssText='position:fixed;left:0;top:0;width:281mm;background:#fff;z-index:999999;pointer-events:none;';
   isolatedHolder.innerHTML=`<style>${isolatedStyles}</style>`;
   const page=sourcePages[index].cloneNode(true);
   page.style.display='block';
@@ -6838,10 +6839,25 @@ async function renderPdfPages(holder){
   let canvas=null;
   try{
    for(let attempt=0;attempt<2;attempt++){
+    const captureW=Math.max(page.scrollWidth,page.offsetWidth,isolatedHolder.scrollWidth);
+    const captureH=Math.max(page.scrollHeight,page.offsetHeight);
     const worker=window.html2pdf().set({
-     margin:[8,8,8,8],
+     margin:0,
      image:{type:'jpeg',quality:0.98},
-     html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0},
+     html2canvas:{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      logging:false,
+      scrollX:0,
+      scrollY:0,
+      x:0,
+      y:0,
+      width:captureW,
+      height:captureH,
+      windowWidth:captureW,
+      windowHeight:captureH
+     },
      jsPDF:{orientation:'landscape',unit:'mm',format:'a4'}
     }).from(page).toCanvas();
     canvas=await worker.get('canvas');
