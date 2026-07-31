@@ -296,7 +296,7 @@ button.quick{
   <div class="header-inner">
     <div>
       <h1>Bulletin de Service Agent de Conduite</h1>
-      <small> RDCN-F-010 V3</small>
+      <small>RDCN-F-010 V3</small>
     </div>
     <div class="status-pill"><span class="status-dot"></span><span id="globalCompletion">0 % complété</span></div>
   </div>
@@ -327,10 +327,10 @@ button.quick{
           <div class="field"><label>Résidence</label><input id="residence"></div>
           <div class="field"><label>JS</label><input id="js"></div>
           <div class="field"><label>Heure de PS prévue</label><input id="psPrev" type="time"></div>
-          <div class="field"><label>Heure de PS réelle</label><input id="psReelle" type="time"></div>
+          <div class="field"><label>Heure de PS réelle <span class="required-mark">*</span></label><input id="psReelle" type="time" required></div>
           <div class="field"><label>Roulement</label><input id="rlt"></div>
           <div class="field"><label>Heure de FS prévue</label><input id="fsPrev" type="time"></div>
-          <div class="field"><label>Heure de FS réelle</label><input id="fsReelle" type="time"></div>
+          <div class="field"><label>Heure de FS réelle <span class="required-mark">*</span></label><input id="fsReelle" type="time" required></div>
           <div class="field"><label>Temps de coupure</label><input id="coupure" type="time" step="60" title="Durée de la coupure au format heures et minutes"></div>
           <div class="checkline"><input id="bs2" type="checkbox"><label for="bs2">2 BS</label></div>
           <div class="checkline"><input id="rhr" type="checkbox"><label for="rhr">RHR</label></div>
@@ -341,7 +341,7 @@ button.quick{
       <section class="card" id="trainsCard">
         <h2>2. Trains <span id="trainsCount">0/5</span></h2>
         <div class="content">
-          <p class="muted">Nat = nature du train. Choix possible : T ou UM.</p>
+          <p class="muted">Aucun train n’est obligatoire. Dès qu’un numéro de train est saisi, les champs marqués d’un * sur cette ligne doivent être complétés. Nat = nature du train : T ou UM.</p>
           <div class="section-tools">
             <button class="quick" onclick="showNextTrain()">Afficher un train supplémentaire</button>
             <button class="quick" onclick="showAllTrains()">Afficher les 5 trains</button>
@@ -6521,8 +6521,8 @@ function addTrainRows(){
   if(i>1)d.classList.add('hidden');
   d.dataset.index=i;
   d.innerHTML=`<div class="row-title">Train ${i}<span class="badge" id="trainBadge${i}">vide</span></div><div class="train-grid">
-  <div class="field"><label>Train n° <span class="required-mark">*</span></label><input id="t${i}_num" required></div><div class="field"><label>De <span class="required-mark">*</span></label><input id="t${i}_de" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare" required></div><div class="field"><label>À <span class="required-mark">*</span></label><input id="t${i}_a" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare" required></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>H dép. <span class="required-mark">*</span></label><input id="t${i}_hDep" type="time" required></div>
-  <div class="field"><label>H arr. <span class="required-mark">*</span></label><input id="t${i}_hArr" type="time" required></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>Nat <span class="required-mark">*</span></label><select id="t${i}_nat" required><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM <span class="required-mark">*</span></label><input id="t${i}_em" required></div><div class="field"><label>Code de composition</label><input id="t${i}_codeCompo"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
+  <div class="field"><label>Train n°</label><input id="t${i}_num"></div><div class="field"><label>De <span class="required-mark">*</span></label><input id="t${i}_de" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>À <span class="required-mark">*</span></label><input id="t${i}_a" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>H dép. <span class="required-mark">*</span></label><input id="t${i}_hDep" type="time"></div>
+  <div class="field"><label>H arr. <span class="required-mark">*</span></label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>Nat <span class="required-mark">*</span></label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM <span class="required-mark">*</span></label><input id="t${i}_em"></div><div class="field"><label>Code de composition</label><input id="t${i}_codeCompo"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
   zone.appendChild(d);
  }
  const r=byId('regularites');
@@ -6593,10 +6593,12 @@ function timeToMinutes(value){
 }
 
 function durationToMinutes(value){
- const match=String(value||'').trim().match(/^(\d{1,3}):(\d{2})$/);
- if(!match) return 0;
+ const normalized=String(value||'').trim();
+ if(!normalized) return 0;
+ const match=normalized.match(/^(\d{1,3}):(\d{2})$/);
+ if(!match) return null;
  const hours=Number(match[1]),minutes=Number(match[2]);
- if(hours<0||minutes<0||minutes>59) return 0;
+ if(hours<0||minutes<0||minutes>59) return null;
  return hours*60+minutes;
 }
 
@@ -6607,9 +6609,12 @@ function formatDuration(minutes){
 }
 
 function nightMinutesBetween(start,end){
+ if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start) return 0;
  let total=0;
- // Une plage de nuit commence chaque jour à 22h00 et se termine le lendemain à 07h00.
- for(let day=-1;day<=2;day++){
+ // Chaque plage de nuit commence à 22h00 et se termine le lendemain à 07h00.
+ const firstDay=Math.floor(start/1440)-1;
+ const lastDay=Math.floor(end/1440);
+ for(let day=firstDay;day<=lastDay;day++){
   const nightStart=day*1440+22*60;
   const nightEnd=(day+1)*1440+7*60;
   total+=Math.max(0,Math.min(end,nightEnd)-Math.max(start,nightStart));
@@ -6617,33 +6622,65 @@ function nightMinutesBetween(start,end){
  return total;
 }
 
-function calculateServiceTimes(){
- const ps=timeToMinutes(val('psReelle'));
- const fsClock=timeToMinutes(val('fsReelle'));
- const breakMinutes=durationToMinutes(val('coupure'));
- if(ps==null||fsClock==null){
-  return {amplitude:null,breakMinutes,effective:null,night:null};
+function calculateServiceTimes(values=null){
+ const psValue=values?.psReelle ?? val('psReelle');
+ const fsValue=values?.fsReelle ?? val('fsReelle');
+ const breakValue=values?.coupure ?? val('coupure');
+ const ps=timeToMinutes(psValue);
+ const fsClock=timeToMinutes(fsValue);
+ const breakMinutes=durationToMinutes(breakValue);
+ const errors=[];
+ if(!String(psValue||'').trim()) errors.push('Heure de PS réelle obligatoire');
+ else if(ps==null) errors.push('Heure de PS réelle invalide');
+ if(!String(fsValue||'').trim()) errors.push('Heure de FS réelle obligatoire');
+ else if(fsClock==null) errors.push('Heure de FS réelle invalide');
+ if(breakMinutes==null) errors.push('Temps de coupure invalide');
+ if(ps==null||fsClock==null||breakMinutes==null){
+  return {valid:false,errors,amplitude:null,breakMinutes:breakMinutes??0,effective:null,night:null,overnight:false};
  }
- // Une FS antérieure à la PS est considérée comme une fin le lendemain.
- const fs=fsClock<ps?fsClock+1440:fsClock;
+ // Une FS antérieure à la PS est une fin de service le lendemain.
+ const overnight=fsClock<ps;
+ const fs=overnight?fsClock+1440:fsClock;
  const amplitude=fs-ps;
+ const valid=errors.length===0;
  return {
+  valid,
+  errors,
   amplitude,
   breakMinutes,
   effective:Math.max(0,amplitude-breakMinutes),
-  night:nightMinutesBetween(ps,fs)
+  night:nightMinutesBetween(ps,fs),
+  overnight
  };
+}
+
+function calculateTrainHeadMinutes(rows=null){
+ let total=0;
+ for(let i=1;i<=5;i++){
+  const row=rows?rows[i-1]||{}:null;
+  const number=String(row?row.num??'':val(`t${i}_num`)).trim();
+  if(!number) continue;
+  const departure=timeToMinutes(row?row.hDep:val(`t${i}_hDep`));
+  const arrivalClock=timeToMinutes(row?row.hArr:val(`t${i}_hArr`));
+  if(departure==null||arrivalClock==null) continue;
+  const arrival=arrivalClock<departure?arrivalClock+1440:arrivalClock;
+  total+=arrival-departure;
+ }
+ return total;
 }
 
 function serviceFooterHTML(generatedAt){
  const times=calculateServiceTimes();
- return `<div class="generated-footer">Généré le ${esc(generatedAt)} &nbsp; · &nbsp; Amplitude PS réelle–FS réelle : ${esc(formatDuration(times.amplitude))} &nbsp; · &nbsp; Coupure : ${esc(formatDuration(times.breakMinutes))} &nbsp; · &nbsp; Travail effectif : ${esc(formatDuration(times.effective))} &nbsp; · &nbsp; Heures de nuit 22h00–07h00 : ${esc(formatDuration(times.night))}</div>`;
+ const trainHeadMinutes=calculateTrainHeadMinutes();
+ return `<div class="generated-footer"><div>Généré le ${esc(generatedAt)} &nbsp; · &nbsp; Amplitude PS réelle-FS réelle : ${esc(formatDuration(times.amplitude))} &nbsp; · &nbsp; Coupure : ${esc(formatDuration(times.breakMinutes))} &nbsp; · &nbsp; Travail effectif : ${esc(formatDuration(times.effective))}</div><div>Temps en tête de train : ${esc(formatDuration(trainHeadMinutes))} &nbsp; · &nbsp; Heures de nuit 22h00-07h00 : ${esc(formatDuration(times.night))}</div></div>`;
 }
 
 function buildPrintableHTML(){
+ const checkedServiceTimes=calculateServiceTimes();
+ if(!checkedServiceTimes.valid) throw new Error('Export refusé : '+checkedServiceTimes.errors.join(' - ')+'.');
  const now=new Date();
  const gen=now.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'medium'});
- const trainHeaders=['Train n°','De','à','Via','Evo dép.<br><span class="tiny">(en minutes)</span>','H dép.','H arr.','Evo arr.<br><span class="tiny">(en minutes)</span>','Nat','EM','Code<br>composition','Poste','Obs','Autre<br>Agt'];
+ const trainHeaders=['Train n°','De','à','Via','Evo dép.<br><span class="tiny">(en minutes)</span>','H dép.','H arr.','Evo arr.<br><span class="tiny">(en minutes)</span>','Nat','EM','Code<br>compo.','Poste','Obs','Autre<br>Agt'];
  const sigRows=[
   ['Signalisation','Signal éteint :',val('sigEteint')],
   ['Signalisation','Aspect anormal ou position douteuse :',val('aspectAnormal')],
@@ -6659,7 +6696,8 @@ function buildPrintableHTML(){
  ];
  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(pdfBaseFileName())}</title><style>
  @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
- *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#555;white-space:nowrap}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:vertical-rl;transform:rotate(180deg);background:#61c0b7;text-align:center;font-weight:bold;width:8mm;font-size:8pt}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;line-height:1.2;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:horizontal-tb;transform:none;background:#61c0b7;text-align:center;font-weight:bold;width:21mm;min-width:21mm;font-size:7pt;line-height:1.1;overflow-wrap:anywhere;padding:1px}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ .page{width:281mm!important;height:190mm!important;min-height:190mm!important;margin:0!important;padding:0 1.5mm 0 0!important;background:#fff!important;overflow:hidden!important}
  </style></head><body>
  <section class="page">
   <div class="headrow"><div><div class="logo">RATP DEV</div><div class="sublogo">CAEN NORMANDIE</div></div><div><div class="title">Bulletin de Service Agent de Conduite.</div><div class="pdf-meta">Date de service : ${esc(serviceDateFR())} &nbsp; - &nbsp; Agent : ${esc(agentFullName())} &nbsp; - &nbsp; Matricule : ${esc(val('matricule'))} &nbsp; - &nbsp; JS : ${esc(val('js'))}</div></div><div></div></div>
@@ -6716,12 +6754,135 @@ function createPdfHolder(){
  const holder=document.createElement('div');
  holder.id='pdfExportHolder';
  holder.innerHTML=`<style>${style}
- #pdfExportHolder{position:absolute;left:0;top:0;width:281mm;background:#fff;color:#111;z-index:999999;font-family:"Times New Roman",serif;}
+ #pdfExportHolder{position:fixed;left:0;top:0;width:281mm;background:#fff;color:#111;z-index:999999;font-family:"Times New Roman",serif;pointer-events:none;}
  #pdfExportHolder .generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;}
- #pdfExportHolder .page{width:281mm;height:190mm;min-height:190mm;margin:0;padding:0;background:#fff;overflow:hidden;page-break-after:always;break-after:page;}
+ #pdfExportHolder .page{width:281mm;height:190mm;min-height:190mm;margin:0;padding:0 1.5mm 0 0;background:#fff;overflow:hidden;page-break-after:always;break-after:page;}
  #pdfExportHolder .page:last-child{page-break-after:auto;break-after:auto;}
  </style>${body}`;
  return holder;
+}
+
+function dataUrlBytes(dataUrl){
+ const base64=String(dataUrl||'').split(',')[1]||'';
+ const binary=atob(base64);
+ const bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+ return bytes;
+}
+
+function joinBytes(parts){
+ const size=parts.reduce((sum,part)=>sum+part.length,0);
+ const out=new Uint8Array(size);
+ let offset=0;
+ parts.forEach(part=>{out.set(part,offset);offset+=part.length;});
+ return out;
+}
+
+function createImagePdf(images){
+ if(!images.length) throw new Error('Aucune page PDF à assembler.');
+ const encode=text=>new TextEncoder().encode(text);
+ const objects=[];
+ const pageRefs=[];
+ images.forEach((image,index)=>pageRefs.push(3+index*3));
+ objects[1]=encode('<< /Type /Catalog /Pages 2 0 R >>');
+ objects[2]=encode(`<< /Type /Pages /Count ${images.length} /Kids [${pageRefs.map(n=>`${n} 0 R`).join(' ')}] >>`);
+ images.forEach((image,index)=>{
+  const pageObject=3+index*3;
+  const contentObject=pageObject+1;
+  const imageObject=pageObject+2;
+  const pageW=841.89,pageH=595.28,marginX=28.35,marginY=22.68;
+  const availableW=pageW-marginX*2,availableH=pageH-marginY*2;
+  const ratio=Math.min(availableW/image.width,availableH/image.height);
+  const drawW=image.width*ratio,drawH=image.height*ratio;
+  const drawX=(pageW-drawW)/2,drawY=(pageH-drawH)/2;
+  const command=`q\n${drawW.toFixed(2)} 0 0 ${drawH.toFixed(2)} ${drawX.toFixed(2)} ${drawY.toFixed(2)} cm\n/Im0 Do\nQ`;
+  objects[pageObject]=encode(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 ${imageObject} 0 R >> >> /Contents ${contentObject} 0 R >>`);
+  objects[contentObject]=encode(`<< /Length ${command.length} >>\nstream\n${command}\nendstream`);
+  const imageHead=encode(`<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${image.bytes.length} >>\nstream\n`);
+  objects[imageObject]=joinBytes([imageHead,image.bytes,encode('\nendstream')]);
+ });
+ const chunks=[encode('%PDF-1.4\n%PDF-BS\n')];
+ const offsets=[0];
+ let byteLength=chunks[0].length;
+ for(let i=1;i<objects.length;i++){
+  offsets[i]=byteLength;
+  const objectBytes=joinBytes([encode(`${i} 0 obj\n`),objects[i],encode('\nendobj\n')]);
+  chunks.push(objectBytes);
+  byteLength+=objectBytes.length;
+ }
+ const xrefOffset=byteLength;
+ let xref=`xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+ for(let i=1;i<objects.length;i++) xref+=`${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
+ xref+=`trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+ chunks.push(encode(xref));
+ return new Blob(chunks,{type:'application/pdf'});
+}
+
+async function renderPdfPages(holder){
+ const sourcePages=[...holder.querySelectorAll('.page')];
+ if(!sourcePages.length) throw new Error('Les pages du bulletin sont introuvables.');
+ const isolatedStyles=holder.querySelector('style')?.textContent||'';
+ holder.id='pdfExportSource';
+ holder.style.display='none';
+ if(document.fonts?.ready) await document.fonts.ready;
+ const images=[];
+ for(let index=0;index<sourcePages.length;index++){
+  const isolatedHolder=document.createElement('div');
+  isolatedHolder.id='pdfExportHolder';
+  isolatedHolder.innerHTML=`<style>${isolatedStyles}</style>`;
+  const page=sourcePages[index].cloneNode(true);
+  page.style.display='block';
+  isolatedHolder.appendChild(page);
+  document.body.appendChild(isolatedHolder);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  let canvas=null;
+  try{
+   for(let attempt=0;attempt<2;attempt++){
+    const worker=window.html2pdf().set({
+     margin:[8,8,8,8],
+     image:{type:'jpeg',quality:0.98},
+     html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,scrollX:0,scrollY:0},
+     jsPDF:{orientation:'landscape',unit:'mm',format:'a4'}
+    }).from(page).toCanvas();
+    canvas=await worker.get('canvas');
+    if(canvas && canvas.width>=10 && canvas.height>=10 && canvas.width>canvas.height && canvasHasVisibleContent(canvas)) break;
+    canvas=null;
+    await new Promise(resolve=>setTimeout(resolve,250));
+   }
+  }finally{
+   isolatedHolder.remove();
+  }
+  if(!canvas) throw new Error(`La page ${index+1} n’a pas pu être capturée avec son contenu.`);
+  images.push({width:canvas.width,height:canvas.height,bytes:dataUrlBytes(canvas.toDataURL('image/jpeg',0.98))});
+ }
+ return images;
+}
+
+function downloadPdfBlob(blob,fileName){
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');
+ link.href=url;
+ link.download=fileName;
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
+function canvasHasVisibleContent(canvas){
+ const sample=document.createElement('canvas');
+ sample.width=96;
+ sample.height=64;
+ const context=sample.getContext('2d',{willReadFrequently:true});
+ context.fillStyle='#ffffff';
+ context.fillRect(0,0,sample.width,sample.height);
+ context.drawImage(canvas,0,0,sample.width,sample.height);
+ const pixels=context.getImageData(0,0,sample.width,sample.height).data;
+ let visible=0;
+ for(let i=0;i<pixels.length;i+=4){
+  if(pixels[i]<242 || pixels[i+1]<242 || pixels[i+2]<242) visible++;
+ }
+ return visible>30;
 }
 
 function getPdfBlockingMissingFields(){
@@ -6730,8 +6891,9 @@ function getPdfBlockingMissingFields(){
  if(!val('prenom').trim()) missing.push('Prénom');
  if(!val('dateService').trim()) missing.push('Date du service');
  if(!val('meteo').trim()) missing.push('Conditions atmosphériques');
+ const serviceTimes=calculateServiceTimes();
+ serviceTimes.errors.forEach(error=>{if(!missing.includes(error))missing.push(error);});
  const requiredTrainFields=[
-  ['num','Train n°'],
   ['de','De'],
   ['a','À'],
   ['hDep','H dép.'],
@@ -6740,9 +6902,9 @@ function getPdfBlockingMissingFields(){
   ['em','EM']
  ];
  for(let i=1;i<=5;i++){
-  // Le premier train est obligatoire. Les suivants le deviennent dès qu'une
-  // information est saisie sur leur ligne.
-  if(i===1 || trainFilled(i)){
+  // Une ligne train est facultative tant qu'aucun numéro n'est renseigné.
+  // Dès qu'un numéro existe, tous les champs opérationnels associés sont requis.
+  if(val(`t${i}_num`).trim()){
    requiredTrainFields.forEach(([suffix,label])=>{
     if(!val(`t${i}_${suffix}`).trim()) missing.push(`Train ${i} – ${label}`);
    });
@@ -6794,31 +6956,17 @@ async function generatePDF(){
   await new Promise(resolve=>setTimeout(resolve,300));
   if(btn) btn.textContent='Création et téléchargement du PDF...';
   const downloadedFileName=pdfFileName();
-  await window.html2pdf()
-   .set({
-    margin:[8,8,8,8],
-    filename:downloadedFileName,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{
-     scale:2,
-     backgroundColor:'#ffffff',
-     useCORS:true,
-     logging:false,
-     scrollX:0,
-     scrollY:0
-    },
-    jsPDF:{orientation:'landscape',unit:'mm',format:'a4'},
-    pagebreak:{mode:['css','legacy'],before:'.page:not(:first-child)'}
-   })
-   .from(holder)
-   .save();
+  const pageImages=await renderPdfPages(holder);
+  const pdfBlob=createImagePdf(pageImages);
+  if(pdfBlob.size<10000) throw new Error('Le PDF généré est anormalement vide.');
+  downloadPdfBlob(pdfBlob,downloadedFileName);
   const notice=byId('notice');
   clearNoticeStyle();
   notice.textContent=`PDF téléchargé automatiquement : ${downloadedFileName}`;
   notice.classList.add('show');
  }catch(e){
   console.error(e);
-  generatePDFPrintFallback();
+  generatePDFPrintFallback(e);
  }finally{
   holder.remove();
   mask.remove();
@@ -6827,12 +6975,14 @@ async function generatePDF(){
  }
 }
 
-function generatePDFPrintFallback(){
+function generatePDFPrintFallback(error=null){
  const blockingMissing=getPdfBlockingMissingFields();
  if(blockingMissing.length){showPdfBlockedMessage(blockingMissing);return;}
  clearNoticeStyle();
  const notice=byId('notice');
- notice.textContent='Le module PDF n’a pas pu être chargé. Recharge la page puis recommence le téléchargement.';
+ notice.textContent=error
+  ? `Le PDF n’a pas pu être généré correctement : ${error.message||error}. Aucun PDF blanc n’a été téléchargé.`
+  : 'Le module PDF n’a pas pu être chargé. Recharge la page puis recommence le téléchargement.';
  notice.classList.add('show');
  notice.style.background='#fef3f2';
  notice.style.color='#7a271a';
@@ -6901,8 +7051,8 @@ function scrollToSection(id){
 }
 
 addTrainRows();
-document.addEventListener('input', updateCompletion);
-document.addEventListener('change', updateCompletion);
+document.addEventListener('input',updateCompletion);
+document.addEventListener('change',updateCompletion);
 updateCompletion();
 </script>
 </body>
