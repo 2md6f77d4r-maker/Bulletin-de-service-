@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -69,6 +68,15 @@ header small{display:block;color:#607077;margin-top:4px}
   max-width:1280px;
   margin:22px auto;
   padding:0 18px 96px;
+}
+.app-credit{
+  max-width:1280px;
+  margin:-74px auto 82px;
+  padding:0 18px;
+  text-align:center;
+  color:#77878c;
+  font-size:11px;
+  letter-spacing:.15px;
 }
 .dashboard{
   display:grid;
@@ -205,6 +213,23 @@ textarea{min-height:84px;resize:vertical}
 }
 .train-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
 .train-grid .wide{grid-column:span 2}
+.em-field{min-width:0}
+.em-inputs{display:flex;flex-direction:column;gap:7px}
+.em-input-row{display:flex;align-items:center;gap:6px}
+.em-input-row input{min-width:0;flex:1}
+.em-number{display:none;flex:0 0 22px;text-align:center;font-size:12px;font-weight:900;color:var(--green-dark)}
+.em-field.um-active .em-number{display:block}
+.em-add,.em-remove{
+  flex:0 0 auto;
+  border-radius:10px;
+  padding:7px 10px;
+  font-size:13px;
+  line-height:1;
+}
+.em-add{margin-top:7px;background:#dff4f1;color:#175e59}
+.em-remove{background:#fbe9e7;color:#9d2a20}
+.em-help{display:none;margin:6px 0 0;font-size:11px;color:#687a80;line-height:1.25}
+.em-field.um-active .em-help{display:block}
 .actions{
   position:fixed;
   bottom:0;
@@ -297,7 +322,7 @@ button.quick{
   <div class="header-inner">
     <div>
       <h1>Bulletin de Service Agent de Conduite</h1>
-      <small>RDCN-F-010 V3</small>
+      <small>RDCN-F-011 V1</small>
     </div>
     <div class="status-pill"><span class="status-dot"></span><span id="globalCompletion">0 % complété</span></div>
   </div>
@@ -442,6 +467,7 @@ button.quick{
   </div>
 </div>
 
+<footer class="app-credit">Développé par Gaëtan Cintran pour RDCN</footer>
 
 <datalist id="garesList">
   <option value="Abancourt"></option>
@@ -6514,7 +6540,69 @@ button.quick{
 const esc = v => String(v||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');
 function byId(id){return document.getElementById(id)}
 function val(id){return byId(id)?.value||''}
-function setValue(id,value){byId(id).value=value; updateCompletion();}
+function setValue(id,value){
+ const element=byId(id);
+ if(!element)return;
+ element.value=value;
+ const natureMatch=id.match(/^t(\d+)_nat$/);
+ if(natureMatch) updateTrainNature(Number(natureMatch[1]));
+ updateCompletion();
+}
+
+function umEngineValues(i){
+ return [...document.querySelectorAll(`#t${i}_emInputs input`)]
+  .map(input=>input.value.trim())
+  .filter(Boolean);
+}
+
+function renumberUMEngines(i){
+ const rows=[...document.querySelectorAll(`#t${i}_emInputs .em-input-row`)];
+ rows.forEach((row,index)=>{
+  const number=index+1;
+  row.querySelector('.em-number').textContent=number;
+  const input=row.querySelector('input');
+  input.setAttribute('aria-label',`Numéro d'engin moteur ${number}`);
+  const remove=row.querySelector('.em-remove');
+  if(remove) remove.hidden=rows.length<=2;
+ });
+}
+
+function addUMEngine(i,value=''){
+ if(val(`t${i}_nat`)!=='UM')return;
+ const container=byId(`t${i}_emInputs`);
+ const row=document.createElement('div');
+ row.className='em-input-row em-extra';
+ row.innerHTML=`<span class="em-number"></span><input class="em-extra-input" value="${esc(value)}" placeholder="N° d'engin moteur"><button type="button" class="em-remove" title="Supprimer cet engin moteur" aria-label="Supprimer cet engin moteur">−</button>`;
+ row.querySelector('.em-remove').addEventListener('click',()=>{
+  row.remove();
+  renumberUMEngines(i);
+  updateCompletion();
+ });
+ container.appendChild(row);
+ renumberUMEngines(i);
+ row.querySelector('input').focus();
+ updateCompletion();
+}
+
+function updateTrainNature(i){
+ const isUM=val(`t${i}_nat`)==='UM';
+ const field=byId(`t${i}_emField`);
+ const container=byId(`t${i}_emInputs`);
+ const primary=byId(`t${i}_em`);
+ field.classList.toggle('um-active',isUM);
+ field.querySelector('.em-label').innerHTML=isUM
+  ? 'Engins moteurs UM <span class="required-mark">*</span>'
+  : 'EM <span class="required-mark">*</span>';
+ primary.placeholder=isUM?'N° d\'engin moteur':'N° d\'engin moteur';
+ field.querySelector('.em-add').hidden=!isUM;
+
+ if(isUM){
+  while(container.querySelectorAll('.em-input-row').length<2) addUMEngine(i);
+ }else{
+  container.querySelectorAll('.em-extra').forEach(row=>row.remove());
+ }
+ renumberUMEngines(i);
+}
 
 function addTrainRows(){
  const zone=byId('trains');
@@ -6525,7 +6613,7 @@ function addTrainRows(){
   d.dataset.index=i;
   d.innerHTML=`<div class="row-title">Train ${i}<span class="badge" id="trainBadge${i}">vide</span></div><div class="train-grid">
   <div class="field"><label>Train n°</label><input id="t${i}_num"></div><div class="field"><label>De <span class="required-mark">*</span></label><input id="t${i}_de" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>À <span class="required-mark">*</span></label><input id="t${i}_a" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>H dép. <span class="required-mark">*</span></label><input id="t${i}_hDep" type="time"></div>
-  <div class="field"><label>H arr. <span class="required-mark">*</span></label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>Nat <span class="required-mark">*</span></label><select id="t${i}_nat"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button class="quick" onclick="setValue('t${i}_nat','T')">T</button><button class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field"><label>EM <span class="required-mark">*</span></label><input id="t${i}_em"></div><div class="field"><label>Code de composition</label><input id="t${i}_codeCompo"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
+  <div class="field"><label>H arr. <span class="required-mark">*</span></label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>Nat <span class="required-mark">*</span></label><select id="t${i}_nat" onchange="updateTrainNature(${i})"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button type="button" class="quick" onclick="setValue('t${i}_nat','T')">T</button><button type="button" class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field em-field" id="t${i}_emField"><label class="em-label">EM <span class="required-mark">*</span></label><div class="em-inputs" id="t${i}_emInputs"><div class="em-input-row"><span class="em-number">1</span><input id="t${i}_em" placeholder="N° d'engin moteur"></div></div><button type="button" class="em-add" hidden onclick="addUMEngine(${i})">+ Ajouter un engin moteur</button><p class="em-help">Deux numéros minimum sont requis en UM.</p></div><div class="field"><label>Code de composition</label><input id="t${i}_codeCompo"></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
   zone.appendChild(d);
  }
  const r=byId('regularites');
@@ -6551,7 +6639,7 @@ function showNextRegularite(){
 }
 function showAllRegularites(){document.querySelectorAll('.regularite-block').forEach(e=>e.classList.remove('hidden'))}
 
-function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td>${esc(val(`t${i}_em`))}</td><td>${esc(val(`t${i}_codeCompo`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
+function trainRowsHTML(){let out='';for(let i=1;i<=5;i++){const engines=umEngineValues(i);const engineText=engines.map((em,index)=>engines.length>1?`${index+1}. ${em}`:em).join(' · ');const compactClass=engines.length>3?' em-compact':'';out+=`<tr><td>${esc(val(`t${i}_num`))}</td><td>${esc(val(`t${i}_de`))}</td><td>${esc(val(`t${i}_a`))}</td><td>${esc(val(`t${i}_via`))}</td><td>${esc(val(`t${i}_evoDep`))}</td><td>${esc(val(`t${i}_hDep`))}</td><td>${esc(val(`t${i}_hArr`))}</td><td>${esc(val(`t${i}_evoArr`))}</td><td>${esc(val(`t${i}_nat`))}</td><td class="em-cell${compactClass}">${esc(engineText)}</td><td>${esc(val(`t${i}_codeCompo`))}</td><td>${esc(val(`t${i}_poste`))}</td><td>${esc(val(`t${i}_obs`))}</td><td class="tick">${byId(`t${i}_autre`).checked?'☑':'☐'}</td></tr>`}return out}
 function regRowsHTML(){let out='';for(let i=1;i<=6;i++){out+=`<tr><td>${esc(val(`r${i}_train`))}</td><td>${esc(val(`r${i}_lieu`))}</td><td>${esc(val(`r${i}_pk`))}</td><td>${esc(val(`r${i}_temps`))}</td><td>${esc(val(`r${i}_motif`))}</td></tr>`}return out}
 function checkedBox(id){return byId(id).checked?'☑':'☐'}
 
@@ -6699,7 +6787,7 @@ function buildPrintableHTML(){
  ];
  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(pdfBaseFileName())}</title><style>
  @page{size:A4 landscape;margin:8mm 8mm 10mm 8mm}
- *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;line-height:1.2;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:horizontal-tb;transform:none;background:#61c0b7;text-align:center;font-weight:bold;width:21mm;min-width:21mm;font-size:7pt;line-height:1.1;overflow-wrap:anywhere;padding:1px}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
+ *{box-sizing:border-box}body{font-family:"Times New Roman",serif;font-size:9pt;color:#111;margin:0;padding-bottom:9mm}.page{position:relative;min-height:186mm;page-break-after:always}.title{text-align:center;font-size:19pt;font-weight:bold;line-height:1;margin-bottom:1mm}.pdf-meta{text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:9pt;margin-bottom:2mm}.logo{font-family:Arial,Helvetica,sans-serif;font-size:18pt;font-weight:bold;color:#2b8b86}.sublogo{font-family:Arial,Helvetica,sans-serif;font-size:6pt;color:white;background:#5ec2b8;padding:1px 12px;display:inline-block}.headrow{display:grid;grid-template-columns:45mm 1fr 32mm;align-items:start;margin-bottom:2mm}.ref{position:absolute;right:0;bottom:1mm;font-size:9pt}.generated-footer{position:absolute;left:0;right:38mm;bottom:1mm;text-align:left;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;line-height:1.2;color:#555}table{border-collapse:collapse;width:100%;table-layout:fixed}td,th{border:1px solid #222;padding:3px;vertical-align:middle}.teal,th{background:#61c0b7;font-weight:bold;text-align:center}.topbox td{height:9mm;font-size:10pt}.line{border-bottom:1px dashed #61c0b7;display:inline-block;min-width:38mm;height:4mm}.trains th{height:11mm;font-size:10pt}.trains td{height:15mm;text-align:center;font-size:10pt}.trains .em-cell{font-size:9pt;line-height:1.2;overflow-wrap:anywhere;word-break:break-word}.trains .em-compact{font-size:7.5pt;line-height:1.1}.tick{font-size:16pt}.tiny{font-size:7.5pt}.split{display:grid;grid-template-columns:1fr 1fr;gap:2mm}.regularite th{height:10mm}.regularite td{height:7.2mm}.obs td{height:7.2mm}.bigcell{height:30mm}.meteo td{height:12mm}.people td{height:16mm}.sig td{height:9mm}.sig .rub{writing-mode:horizontal-tb;transform:none;background:#61c0b7;text-align:center;font-weight:bold;width:21mm;min-width:21mm;font-size:7pt;line-height:1.1;overflow-wrap:anywhere;padding:1px}.sig .label{background:#61c0b7;font-weight:bold;width:42mm}.blank{height:86mm;border:1px solid #222}.noBorder{border:0!important}.small{font-size:8pt}@media print{button{display:none}}
  .page{width:281mm!important;height:190mm!important;min-height:190mm!important;margin:0!important;padding:0 1.5mm 0 0!important;background:#fff!important;overflow:hidden!important}
  </style></head><body>
  <section class="page">
@@ -6928,8 +7016,7 @@ function getPdfBlockingMissingFields(){
   ['a','À'],
   ['hDep','H dép.'],
   ['hArr','H arr.'],
-  ['nat','Nat'],
-  ['em','EM']
+  ['nat','Nat']
  ];
  for(let i=1;i<=5;i++){
   // Une ligne train est facultative tant qu'aucun numéro n'est renseigné.
@@ -6938,6 +7025,14 @@ function getPdfBlockingMissingFields(){
    requiredTrainFields.forEach(([suffix,label])=>{
     if(!val(`t${i}_${suffix}`).trim()) missing.push(`Train ${i} – ${label}`);
    });
+   if(val(`t${i}_nat`)==='UM'){
+    const engineInputs=[...document.querySelectorAll(`#t${i}_emInputs input`)];
+    engineInputs.forEach((input,index)=>{
+     if(!input.value.trim()) missing.push(`Train ${i} – Engin moteur UM n°${index+1}`);
+    });
+   }else if(!val(`t${i}_em`).trim()){
+    missing.push(`Train ${i} – EM`);
+   }
   }
  }
  return missing;
@@ -7024,6 +7119,7 @@ function generatePDFPrintFallback(error=null){
 function resetForm(){
  if(confirm('Réinitialiser toutes les cases ?')){
   document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''});
+  for(let i=1;i<=5;i++) updateTrainNature(i);
   document.querySelectorAll('.train-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
   document.querySelectorAll('.regularite-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
   updateCompletion();
@@ -7031,7 +7127,7 @@ function resetForm(){
 }
 
 function filled(ids){return ids.filter(id=>String(val(id)).trim()!=='').length}
-function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_codeCompo`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || byId(`t${i}_autre`).checked}
+function trainFilled(i){return [`t${i}_num`,`t${i}_de`,`t${i}_a`,`t${i}_via`,`t${i}_evoDep`,`t${i}_hDep`,`t${i}_hArr`,`t${i}_evoArr`,`t${i}_nat`,`t${i}_em`,`t${i}_codeCompo`,`t${i}_poste`,`t${i}_obs`].some(id=>String(val(id)).trim()!=='') || umEngineValues(i).length>0 || byId(`t${i}_autre`).checked}
 function regFilled(i){return [`r${i}_train`,`r${i}_lieu`,`r${i}_pk`,`r${i}_temps`,`r${i}_motif`].some(id=>String(val(id)).trim()!=='')}
 function updateCompletion(){
  const infoIds=['nom','prenom','matricule','dateService','residence','js','psPrev','psReelle','rlt','fsPrev','fsReelle','coupure'];
