@@ -6507,7 +6507,7 @@ button.quick{
 <div class="actions">
   <button class="secondary" onclick="resetForm()">Réinitialiser</button>
   <button class="secondary" onclick="checkBeforePDF()">Vérifier</button>
-  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF</button>
+  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF et préparer le mail</button>
 </div>
 
 <script>
@@ -6888,6 +6888,17 @@ function downloadPdfBlob(blob,fileName){
  setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 
+function openPdfMailDraft(fileName){
+ const subject=fileName;
+ const body=`Le fichier ${fileName} vient d’être téléchargé.\n\nMerci de l’ajouter en pièce jointe depuis le dossier Téléchargements avant l’envoi.`;
+ const mailLink=document.createElement('a');
+ mailLink.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+ mailLink.style.display='none';
+ document.body.appendChild(mailLink);
+ mailLink.click();
+ mailLink.remove();
+}
+
 function canvasHasVisibleContent(canvas){
  const sample=document.createElement('canvas');
  sample.width=96;
@@ -6979,9 +6990,11 @@ async function generatePDF(){
   const pdfBlob=createImagePdf(pageImages);
   if(pdfBlob.size<10000) throw new Error('Le PDF généré est anormalement vide.');
   downloadPdfBlob(pdfBlob,downloadedFileName);
+  await new Promise(resolve=>setTimeout(resolve,400));
+  openPdfMailDraft(downloadedFileName);
   const notice=byId('notice');
   clearNoticeStyle();
-  notice.textContent=`PDF téléchargé automatiquement : ${downloadedFileName}`;
+  notice.textContent=`PDF téléchargé : ${downloadedFileName}. Le nouveau mail a été préparé ; ajoute le PDF depuis le dossier Téléchargements avant l’envoi.`;
   notice.classList.add('show');
  }catch(e){
   console.error(e);
