@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bulletin de service — Version 02.01</title>
+<title>Bulletin de service — Version 02.02</title>
 <style>
 :root{
   --green:#64C3B9;
@@ -7054,7 +7054,7 @@ async function renderPdfPages(holder){
    isolatedHolder.remove();
   }
   if(!canvas) throw new Error(`La page ${index+1} n’a pas pu être capturée avec son contenu.`);
-  images.push({width:canvas.width,height:canvas.height,bytes:dataUrlBytes(canvas.toDataURL('image/jpeg',0.98))});
+  images.push({width:canvas.width,height:canvas.height,bytes:dataUrlBytes(canvas.toDataURL('image/jpeg',0.92))});
  }
  return images;
 }
@@ -7074,9 +7074,12 @@ let lastMailDraft=null;
 
 function getMailDraft(fileName){
  const date=serviceDateFR() || new Date().toLocaleDateString('fr-FR');
+ const sign=[val('prenom').trim(),val('nom').trim()].filter(Boolean).join(' ');
  return {
   subject:fileName,
-  body:`Bonjour,\n\nVoici mon BS du ${date}.\n\nCordialement.`
+  to:loadPref('bs_mail_to',''),
+  cc:loadPref('bs_mail_cc',''),
+  body:`Bonjour,\n\nVoici mon BS du ${date}.\n\nCordialement${sign?',\n'+sign:'.'}`
  };
 }
 
@@ -7089,16 +7092,22 @@ function mailDeviceFamily(){
 }
 
 function mailClientUrl(client,draft){
- const subject=encodeURIComponent(draft.subject);
- const body=encodeURIComponent(draft.body.replace(/\r?\n/g,'\r\n'));
+ const enc=encodeURIComponent;
+ const subject=enc(draft.subject);
+ const body=enc(draft.body.replace(/\r?\n/g,'\r\n'));
+ const to=normalizeAddrs(draft.to),cc=normalizeAddrs(draft.cc);
+ const addr=t=>enc(t).replace(/%40/g,'@').replace(/%2C/g,',');
+ const q=pairs=>pairs.filter(p=>p[1]).map(p=>p[0]+'='+p[1]).join('&');
+ const std=()=>q([['to',addr(to)],['cc',addr(cc)],['subject',subject],['body',body]]);
+ const mailto=`mailto:${addr(to)}?${q([['cc',addr(cc)],['subject',subject],['body',body]])}`;
  if(client==='outlook-app'){
-  if(mailDeviceFamily()==='desktop') return `mailto:?subject=${subject}&body=${body}`;
-  return `ms-outlook://compose?subject=${subject}&body=${body}`;
+  if(mailDeviceFamily()==='desktop') return mailto;
+  return `ms-outlook://compose?${std()}`;
  }
- if(client==='outlook-web-business') return `https://outlook.office.com/mail/deeplink/compose?subject=${subject}&body=${body}`;
- if(client==='outlook-web-personal') return `https://outlook.live.com/mail/0/deeplink/compose?subject=${subject}&body=${body}`;
- if(client==='gmail') return `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
- return `mailto:?subject=${subject}&body=${body}`;
+ if(client==='outlook-web-business') return `https://outlook.office.com/mail/deeplink/compose?${std()}`;
+ if(client==='outlook-web-personal') return `https://outlook.live.com/mail/0/deeplink/compose?${std()}`;
+ if(client==='gmail') return `https://mail.google.com/mail/?${q([['view','cm'],['fs','1'],['to',addr(to)],['cc',addr(cc)],['su',subject],['body',body]])}`;
+ return mailto;
 }
 
 function showOutlookAppFallback(){
@@ -7139,14 +7148,19 @@ function launchMailClient(client,draft){
   return;
  }
  if(client==='outlook-app' && mailDeviceFamily()!=='desktop'){
-  let applicationOpened=false;
-  const detectDeparture=()=>{if(document.hidden)applicationOpened=true;};
-  document.addEventListener('visibilitychange',detectDeparture);
+  let left=false;
+  const mark=()=>{left=true;};
+  const onVis=()=>{if(document.hidden)left=true;};
+  document.addEventListener('visibilitychange',onVis);
+  window.addEventListener('pagehide',mark);
+  window.addEventListener('blur',mark);
   window.location.href=url;
   setTimeout(()=>{
-   document.removeEventListener('visibilitychange',detectDeparture);
-   if(!applicationOpened && document.visibilityState==='visible') showOutlookAppFallback();
-  },1600);
+   document.removeEventListener('visibilitychange',onVis);
+   window.removeEventListener('pagehide',mark);
+   window.removeEventListener('blur',mark);
+   if(!left && document.visibilityState==='visible') showOutlookAppFallback();
+  },2500);
   return;
  }
  window.location.href=url;
@@ -7157,6 +7171,9 @@ function closeMailClientChooser(){
 }
 
 function chooseMailClient(client){
+ const remember=byId('mailRemember')?.checked;
+ updateMailRecipients();
+ if(remember) savePref('bs_mail_client',client);
  closeMailClientChooser();
  if(lastMailDraft) launchMailClient(client,lastMailDraft);
 }
@@ -7164,30 +7181,47 @@ function chooseMailClient(client){
 function showMailClientChooser(){
  closeMailClientChooser();
  const device=mailDeviceFamily();
- const outlookLabel=device==='desktop' ? 'Outlook (application par défaut)' : 'Outlook (application)';
- const platformHelp=device==='desktop'
-  ? 'Sur Windows ou Mac, Outlook doit être défini comme application de messagerie par défaut.'
-  : 'Compatible Android et iOS. Outlook doit être installé pour utiliser son application.';
+ const d=lastMailDraft||{subject:'',body:''};
+ const hasPdf=!!lastPdfBlob;
+ const showShare=canSharePdf() && device!=='desktop';
+ const showEml=hasPdf && device==='desktop';
+ const clients=[
+  ['outlook-app',device==='desktop'?'Outlook (application par défaut)':'Outlook (application)'],
+  ['outlook-web-business','Outlook Web professionnel'],
+  ['outlook-web-personal','Outlook.com personnel'],
+  ['gmail','Gmail'],
+  ['default','Messagerie par défaut']
+ ];
+ const pref=clients.find(c=>c[0]===loadPref('bs_mail_client',''));
+ const others=clients.filter(c=>!pref || c[0]!==pref[0]);
+ const base='padding:14px 10px;border:1px solid #d8e3e4;border-radius:12px;background:#fff;color:#1f2a30;font-weight:800;cursor:pointer;';
+ const strong='width:100%;padding:15px 10px;border:2px solid #007D69;border-radius:12px;background:#007D69;color:#fff;font-weight:800;cursor:pointer;margin-bottom:6px;';
+ const soft='width:100%;padding:14px 10px;border:1px solid #b7dcd7;border-radius:12px;background:#edf9f7;color:#1f2a30;font-weight:800;cursor:pointer;margin-bottom:10px;';
+ const hint='font-size:12px;color:#607077;line-height:1.4;margin-bottom:12px;';
+ const field='width:100%;padding:11px 12px;border:1px solid #cfe4e0;border-radius:10px;font-size:15px;margin-top:4px;';
+ const label='display:block;font-size:13px;font-weight:700;margin-bottom:8px;';
  const overlay=document.createElement('div');
  overlay.id='mailClientChooser';
- overlay.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(20,35,40,.62);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Arial,Helvetica,sans-serif;';
+ overlay.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(20,35,40,.62);display:flex;padding:18px;font-family:Arial,Helvetica,sans-serif;overflow:auto;';
  overlay.innerHTML=`
-  <div role="dialog" aria-modal="true" aria-labelledby="mailChooserTitle" style="width:min(520px,100%);background:#fff;border-radius:20px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.28);color:#1f2a30;">
-   <div id="mailChooserTitle" style="font-size:21px;font-weight:800;margin-bottom:7px;">Avec quelle messagerie préparer le mail ?</div>
-   <div style="font-size:14px;color:#607077;margin-bottom:8px;line-height:1.45;">Le PDF est téléchargé. Choisissez la boîte mail à ouvrir, puis ajoutez le PDF en pièce jointe avant l’envoi.</div>
-   <div style="font-size:12px;color:#718187;margin-bottom:14px;line-height:1.4;">${platformHelp}</div>
-   <div style="padding:12px 14px;margin-bottom:18px;border:1px solid #d8e3e4;border-radius:12px;background:#f7faf9;font-size:13px;line-height:1.5;">
-    <div><span style="font-weight:800;">Objet :</span> ${esc(lastMailDraft?.subject||'')}</div>
-    <div style="margin-top:7px;"><span style="font-weight:800;">Message :</span><br>${esc(lastMailDraft?.body||'')}</div>
+  <div role="dialog" aria-modal="true" aria-labelledby="mailChooserTitle" style="width:min(520px,100%);margin:auto;background:#fff;border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.28);color:#1f2a30;">
+   <div id="mailChooserTitle" style="font-size:21px;font-weight:800;margin-bottom:6px;">Envoyer le bulletin de service</div>
+   <div style="font-size:14px;color:#607077;margin-bottom:12px;line-height:1.45;">${hasPdf?'Le PDF est prêt.':'Aucun PDF généré pour l’instant : le mail sera préparé sans pièce jointe.'}</div>
+   <label style="${label}">Destinataire<input id="mailTo" type="text" inputmode="email" autocomplete="email" placeholder="adresse@exemple.fr" value="${esc(d.to||'')}" oninput="updateMailRecipients()" style="${field}"></label>
+   <label style="${label}">Copie (facultatif)<input id="mailCc" type="text" inputmode="email" autocomplete="off" placeholder="adresse@exemple.fr" value="${esc(d.cc||'')}" oninput="updateMailRecipients()" style="${field}"></label>
+   <div style="background:#f5faf9;border:1px solid #d8e3e4;border-radius:12px;padding:10px 12px;font-size:13px;margin:10px 0 14px;line-height:1.45;">
+    <div><b>Objet :</b> ${esc(d.subject||'')}</div>
+    <div style="margin-top:6px;"><b>Message :</b><br>${esc(d.body||'').replace(/\n/g,'<br>')}</div>
    </div>
-   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;">
-    <button type="button" onclick="chooseMailClient('outlook-app')" style="padding:14px 10px;border:1px solid #b7dcd7;border-radius:12px;background:#edf9f7;color:#1f2a30;font-weight:800;cursor:pointer;">${outlookLabel}</button>
-    <button type="button" onclick="chooseMailClient('outlook-web-business')" style="padding:14px 10px;border:1px solid #d8e3e4;border-radius:12px;background:#fff;color:#1f2a30;font-weight:800;cursor:pointer;">Outlook Web professionnel</button>
-    <button type="button" onclick="chooseMailClient('outlook-web-personal')" style="padding:14px 10px;border:1px solid #d8e3e4;border-radius:12px;background:#fff;color:#1f2a30;font-weight:800;cursor:pointer;">Outlook.com personnel</button>
-    <button type="button" onclick="chooseMailClient('gmail')" style="padding:14px 10px;border:1px solid #d8e3e4;border-radius:12px;background:#fff;color:#1f2a30;font-weight:800;cursor:pointer;">Gmail</button>
-    <button type="button" onclick="chooseMailClient('default')" style="grid-column:1/-1;padding:14px 10px;border:1px solid #d8e3e4;border-radius:12px;background:#fff;color:#1f2a30;font-weight:800;cursor:pointer;">Messagerie par défaut</button>
+   ${showShare?`<button type="button" onclick="sharePdfFile()" style="${strong}">📎 Partager le PDF (pièce jointe incluse)</button><div style="${hint}">Choisissez Outlook dans la liste de partage : le PDF est déjà joint. Le destinataire est à saisir dans Outlook.</div>`:''}
+   ${showEml?`<button type="button" onclick="downloadEmlDraft()" style="${strong}">📎 Télécharger le brouillon avec PDF joint (.eml)</button><div style="${hint}">Ouvrez le fichier téléchargé : Outlook affiche un message prêt à envoyer, PDF joint, avec le destinataire ci-dessus.</div>`:''}
+   ${pref?`<button type="button" onclick="chooseMailClient('${pref[0]}')" style="${(showShare||showEml)?soft:strong}">Continuer avec ${esc(pref[1])}</button>`:''}
+   <div style="${hint}margin-top:4px;">${pref?'Autres messageries :':'Ou choisir une messagerie (le PDF est alors à joindre depuis Téléchargements) :'}</div>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+    ${others.map(c=>`<button type="button" onclick="chooseMailClient('${c[0]}')" style="${base}">${esc(c[1])}</button>`).join('')}
    </div>
-   <button type="button" onclick="closeMailClientChooser()" style="width:100%;margin-top:16px;padding:11px;border:0;background:transparent;color:#607077;font-weight:700;cursor:pointer;">Fermer sans ouvrir de messagerie</button>
+   <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:14px;"><input id="mailRemember" type="checkbox" checked> Mémoriser cette messagerie pour la prochaine fois</label>
+   <button type="button" onclick="closeMailClientChooser()" style="width:100%;margin-top:14px;padding:11px;border:0;background:transparent;color:#607077;font-weight:700;cursor:pointer;">Fermer sans ouvrir de message</button>
   </div>`;
  overlay.addEventListener('click',event=>{if(event.target===overlay)closeMailClientChooser()});
  document.body.appendChild(overlay);
@@ -7272,8 +7306,10 @@ function clearNoticeStyle(){
 
 async function generatePDF(){
  const blockingMissing=getPdfBlockingMissingFields();
- if(blockingMissing.length)showPdfBlockedMessage(blockingMissing);
- else clearNoticeStyle();
+ if(blockingMissing.length){
+  showPdfBlockedMessage(blockingMissing);
+  if(!confirm('Champs obligatoires manquants :\n- '+blockingMissing.join('\n- ')+'\n\nGénérer quand même le PDF et préparer le mail ?')) return;
+ }else clearNoticeStyle();
  const btn=byId('pdfBtn');
  const oldText=btn ? btn.textContent : '';
  const ready=await waitForPdfLibraries();
@@ -7299,13 +7335,14 @@ async function generatePDF(){
   const downloadedFileName=pdfFileName();
   const pageImages=await renderPdfPages(holder);
   const pdfBlob=createImagePdf(pageImages);
+  lastPdfBlob=pdfBlob;lastPdfName=downloadedFileName;
   if(pdfBlob.size<10000) throw new Error('Le PDF généré est anormalement vide.');
   downloadPdfBlob(pdfBlob,downloadedFileName);
   await new Promise(resolve=>setTimeout(resolve,400));
   openPdfMailDraft(downloadedFileName);
   const notice=byId('notice');
-  clearNoticeStyle();
-  notice.innerHTML=`PDF téléchargé : ${esc(downloadedFileName)}. Le mail a été préparé ; ajoute le PDF depuis le dossier Téléchargements avant l’envoi. <button type="button" onclick="changeMailClient()" style="margin-left:8px;padding:6px 10px;border:1px solid #9bcfc8;border-radius:8px;background:#fff;color:#17645f;font-weight:700;cursor:pointer;">Choisir une autre messagerie</button>`;
+  if(!blockingMissing.length)clearNoticeStyle();
+  notice.innerHTML=(blockingMissing.length?'⚠ Champs obligatoires manquants : '+esc(blockingMissing.join(', '))+'. ':'')+`PDF téléchargé : ${esc(downloadedFileName)}. Le mail a été préparé ; ajoute le PDF depuis le dossier Téléchargements avant l’envoi. <button type="button" onclick="changeMailClient()" style="margin-left:8px;padding:6px 10px;border:1px solid #9bcfc8;border-radius:8px;background:#fff;color:#17645f;font-weight:700;cursor:pointer;">Choisir une autre messagerie</button>`;
   notice.classList.add('show');
  }catch(e){
   console.error(e);
@@ -7331,8 +7368,9 @@ function generatePDFPrintFallback(error=null){
 }
 
 function resetForm(){
- if(confirm('Réinitialiser toutes les cases ?')){
-  document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='checkbox')e.checked=false;else e.value=''});
+ if(confirm('Réinitialiser toutes les cases ? (nom, prénom, matricule et résidence sont conservés)')){
+  document.querySelectorAll('input,textarea,select').forEach(e=>{if(e.type==='file'||BS_KEEP_IDS.includes(e.id))return;if(e.type==='checkbox')e.checked=false;else e.value=''});
+  clearDraft();lastPdfBlob=null;
   for(let i=1;i<=5;i++) updateTrainNature(i);
   document.querySelectorAll('.train-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
   document.querySelectorAll('.regularite-block').forEach((e,i)=>{if(i>0)e.classList.add('hidden')});
@@ -7565,6 +7603,190 @@ window.addEventListener('pageshow',showWelcome);
 document.addEventListener('input',updateCompletion);
 document.addEventListener('change',updateCompletion);
 updateCompletion();
+
+
+/* ===== Ajouts : partage/.eml, préférences mail, brouillon automatique ===== */
+let lastPdfBlob=null,lastPdfName='';
+const BS_KEEP_IDS=['nom','prenom','matricule','residence'];
+let draftReady=false,userTouched=false,draftTimer=null;
+
+function loadPref(k,d=''){try{const v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}}
+function savePref(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function normalizeAddrs(t){return String(t||'').split(/[;,\s]+/).filter(Boolean).join(',');}
+
+function updateMailRecipients(){
+ const to=byId('mailTo')?.value||'',cc=byId('mailCc')?.value||'';
+ if(lastMailDraft){lastMailDraft.to=to;lastMailDraft.cc=cc;}
+ savePref('bs_mail_to',to);savePref('bs_mail_cc',cc);
+}
+
+function canSharePdf(){
+ try{
+  if(!lastPdfBlob||!navigator.share||!navigator.canShare) return false;
+  return navigator.canShare({files:[new File([lastPdfBlob],lastPdfName||'BS.pdf',{type:'application/pdf'})]});
+ }catch(e){return false;}
+}
+
+async function sharePdfFile(){
+ if(!lastPdfBlob) return;
+ const d=lastMailDraft||getMailDraft(lastPdfName);
+ try{
+  const file=new File([lastPdfBlob],lastPdfName,{type:'application/pdf'});
+  await navigator.share({files:[file],title:d.subject,text:d.body});
+  closeMailClientChooser();
+ }catch(e){
+  if(e&&e.name!=='AbortError') alert('Le partage a échoué : '+(e.message||e)+'\nUtilisez une des messageries ci-dessous et joignez le PDF depuis Téléchargements.');
+ }
+}
+
+function blobToBase64(blob){
+ return new Promise((resolve,reject)=>{
+  const r=new FileReader();
+  r.onload=()=>resolve(String(r.result).split(',')[1]||'');
+  r.onerror=()=>reject(r.error);
+  r.readAsDataURL(blob);
+ });
+}
+function utf8b64(t){const b=new TextEncoder().encode(t);let s='';b.forEach(c=>{s+=String.fromCharCode(c);});return btoa(s);}
+function wrap76(t){return (t.match(/.{1,76}/g)||[]).join('\r\n');}
+function encodeMailHeader(t){
+ if(/^[\x20-\x7E]*$/.test(t)) return t;
+ const parts=[];let cur='';
+ for(const ch of t){
+  if(new TextEncoder().encode(cur+ch).length>42){parts.push(cur);cur=ch;}else cur+=ch;
+ }
+ if(cur) parts.push(cur);
+ return parts.map(p=>`=?UTF-8?B?${utf8b64(p)}?=`).join('\r\n ');
+}
+
+async function buildEmlBlob(){
+ const d=lastMailDraft||getMailDraft(lastPdfName);
+ const boundary='----=_BS_'+Date.now().toString(36)+Math.random().toString(36).slice(2);
+ const ascii=lastPdfName.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'_').replace(/["\\]/g,'_');
+ const pdf64=wrap76(await blobToBase64(lastPdfBlob));
+ const body64=wrap76(utf8b64(d.body.replace(/\r?\n/g,'\r\n')));
+ const to=normalizeAddrs(d.to).replace(/,/g,', '),cc=normalizeAddrs(d.cc).replace(/,/g,', ');
+ const lines=[];
+ if(to) lines.push('To: '+to);
+ if(cc) lines.push('Cc: '+cc);
+ lines.push(
+  'Subject: '+encodeMailHeader(d.subject),
+  'X-Unsent: 1',
+  'MIME-Version: 1.0',
+  'Content-Type: multipart/mixed; boundary="'+boundary+'"',
+  '',
+  '--'+boundary,
+  'Content-Type: text/plain; charset=UTF-8',
+  'Content-Transfer-Encoding: base64',
+  '',
+  body64,
+  '--'+boundary,
+  'Content-Type: application/pdf; name="'+ascii+'"',
+  'Content-Transfer-Encoding: base64',
+  'Content-Disposition: attachment; filename="'+ascii+'";\r\n filename*=UTF-8\'\''+encodeURIComponent(lastPdfName),
+  '',
+  pdf64,
+  '--'+boundary+'--',
+  ''
+ );
+ return new Blob([lines.join('\r\n')],{type:'message/rfc822'});
+}
+
+async function downloadEmlDraft(){
+ if(!lastPdfBlob){alert('Générez d’abord le PDF.');return;}
+ updateMailRecipients();
+ try{
+  const blob=await buildEmlBlob();
+  downloadPdfBlob(blob,lastPdfName.replace(/\.pdf$/i,'')+'.eml');
+ }catch(e){alert('Impossible de créer le brouillon .eml : '+(e.message||e));}
+}
+
+/* --- Brouillon automatique --- */
+function collectFields(){
+ const f={};
+ document.querySelectorAll('input,textarea,select').forEach(el=>{
+  if(!el.id||el.type==='file'||el.closest('#mailClientChooser')||el.closest('#mailLaunchFallback')) return;
+  f[el.id]=el.type==='checkbox'?el.checked:el.value;
+ });
+ return f;
+}
+function collectUM(){
+ return [1,2,3,4,5].map(i=>[...document.querySelectorAll(`#t${i}_emInputs .em-extra-input`)].map(x=>x.value));
+}
+function draftHasContent(f){
+ return Object.entries(f||{}).some(([id,v])=>!BS_KEEP_IDS.includes(id)&&(v===true||(typeof v==='string'&&v.trim()!=='')));
+}
+function saveIdentity(f){
+ const o={};BS_KEEP_IDS.forEach(id=>{if(f[id])o[id]=f[id];});
+ if(Object.keys(o).length) savePref('bs_identity',JSON.stringify(o));
+}
+function saveDraft(){
+ if(!draftReady||!userTouched) return;
+ const f=collectFields();
+ saveIdentity(f);
+ if(!draftHasContent(f)){try{localStorage.removeItem('bs_draft');}catch(e){}return;}
+ savePref('bs_draft',JSON.stringify({ts:Date.now(),f,um:collectUM()}));
+}
+function clearDraft(){try{localStorage.removeItem('bs_draft');}catch(e){}userTouched=false;}
+function applyIdentity(){
+ try{
+  const o=JSON.parse(loadPref('bs_identity','{}'))||{};
+  BS_KEEP_IDS.forEach(id=>{const el=byId(id);if(el&&!el.value&&o[id])el.value=o[id];});
+ }catch(e){}
+}
+function restoreDraft(d){
+ const apply=()=>Object.entries(d.f).forEach(([id,v])=>{
+  const el=byId(id);if(!el||el.type==='file')return;
+  if(el.type==='checkbox') el.checked=!!v; else el.value=v;
+ });
+ apply();
+ for(let i=1;i<=5;i++){try{updateTrainNature(i);}catch(e){}}
+ apply();
+ (d.um||[]).forEach((vals,idx)=>{
+  const i=idx+1;
+  if(byId(`t${i}_nat`)?.value!=='UM') return;
+  vals.forEach((v,k)=>{
+   const existing=[...document.querySelectorAll(`#t${i}_emInputs .em-extra-input`)];
+   if(existing[k]) existing[k].value=v; else addUMEngine(i,v,false);
+  });
+ });
+ document.querySelectorAll('.train-block').forEach((e,i)=>{if(trainFilled(i+1))e.classList.remove('hidden');});
+ document.querySelectorAll('.regularite-block').forEach((e,i)=>{if(regFilled(i+1))e.classList.remove('hidden');});
+ updateCompletion();
+}
+function showDraftBanner(d){
+ byId('draftBanner')?.remove();
+ const when=new Date(d.ts).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+ const bar=document.createElement('div');
+ bar.id='draftBanner';
+ bar.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:1000002;max-width:560px;margin:auto;background:#fff;border:2px solid #64C3B9;border-radius:14px;padding:14px 16px;box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:Arial,Helvetica,sans-serif;color:#1f2a30;display:flex;flex-wrap:wrap;gap:10px;align-items:center;';
+ bar.innerHTML=`<div style="flex:1 1 220px;font-size:14px;line-height:1.4;"><b>Brouillon retrouvé</b><br>Dernière modification : ${esc(when)}</div>
+  <button type="button" id="draftRestore" style="padding:11px 16px;border:0;border-radius:10px;background:#007D69;color:#fff;font-weight:800;cursor:pointer;">Restaurer</button>
+  <button type="button" id="draftIgnore" style="padding:11px 14px;border:1px solid #d8e3e4;border-radius:10px;background:#fff;color:#1f2a30;font-weight:700;cursor:pointer;">Ignorer</button>`;
+ document.body.appendChild(bar);
+ byId('draftRestore').onclick=()=>{restoreDraft(d);bar.remove();draftReady=true;userTouched=true;saveDraft();};
+ byId('draftIgnore').onclick=()=>{bar.remove();clearDraft();draftReady=true;};
+}
+function onFormActivity(e){
+ const t=e&&e.target;
+ if(t&&t.closest&&t.closest('#mailClientChooser')) return;
+ userTouched=true;
+ if(t&&t.type==='file') return;
+ lastPdfBlob=null;
+ clearTimeout(draftTimer);draftTimer=setTimeout(saveDraft,600);
+}
+document.addEventListener('input',onFormActivity);
+document.addEventListener('change',onFormActivity);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft();});
+window.addEventListener('pagehide',saveDraft);
+setInterval(saveDraft,15000);
+(function initBsExtras(){
+ applyIdentity();
+ let d=null;
+ try{d=JSON.parse(loadPref('bs_draft','null'));}catch(e){}
+ if(d&&d.f&&d.ts&&(Date.now()-d.ts)<72*3600*1000&&draftHasContent(d.f)) showDraftBanner(d);
+ else{clearDraft();draftReady=true;}
+})();
 </script>
 </body>
 </html>
