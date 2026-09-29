@@ -8,22 +8,23 @@
 <title>Bulletin de service — Version 02.01</title>
 <style>
 :root{
-  --green:#5ec2b8;
-  --green-dark:#2f9188;
-  --dark:#1f2a30;
-  --line:#d8e3e4;
-  --bg:#eef3f4;
+  --green:#64C3B9;
+  --green-dark:#007D69;
+  --blue:#0A0082;
+  --dark:#17373d;
+  --line:#cfe4e0;
+  --bg:#f0f8f7;
   --card:#ffffff;
-  --soft:#f7fafb;
-  --danger:#b42318;
-  --warning:#b54708;
-  --ok:#027a48;
+  --soft:#f5faf9;
+  --danger:#0A0082;
+  --warning:#00695b;
+  --ok:#007D69;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
-  background:linear-gradient(135deg,#eef3f4 0%,#f8fbfb 50%,#e8f4f2 100%);
+  background:linear-gradient(135deg,#f0f8f7 0%,#ffffff 52%,#e9f6f3 100%);
   color:var(--dark);
 }
 header{
@@ -32,7 +33,7 @@ header{
   z-index:10;
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(8px);
-  border-bottom:1px solid #d7e1e2;
+  border-bottom:3px solid var(--green);
   padding:14px 22px;
   box-shadow:0 4px 18px rgba(0,0,0,.07);
 }
@@ -44,15 +45,15 @@ header{
   align-items:center;
   gap:20px;
 }
-header h1{margin:0;font-size:22px;letter-spacing:-.3px}
+header h1{margin:0;font-size:22px;letter-spacing:-.3px;color:var(--blue)}
 header small{display:block;color:#607077;margin-top:4px}
 .status-pill{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  background:#e4f7f4;
-  border:1px solid #b6e7df;
-  color:#17645f;
+  background:#e7f6f3;
+  border:1px solid #b4ded8;
+  color:#005c50;
   border-radius:999px;
   padding:8px 12px;
   font-weight:700;
@@ -127,8 +128,9 @@ header small{display:block;color:#607077;margin-top:4px}
   font-size:14px;
 }
 .navbtn:hover,.navbtn.active{
-  background:#edf9f7;
-  border-color:#bfe7e1;
+  background:#eaf7f4;
+  border-color:#a9dcd3;
+  color:var(--blue);
 }
 .badge{
   font-size:12px;
@@ -148,7 +150,8 @@ header small{display:block;color:#607077;margin-top:4px}
 .card h2{
   margin:0;
   padding:15px 18px;
-  background:linear-gradient(90deg,var(--green),#85d7cf);
+  background:linear-gradient(90deg,#64C3B9,#a0ded7);
+  color:var(--blue);
   font-size:18px;
   border-bottom:1px solid #abd8d3;
   display:flex;
@@ -228,7 +231,7 @@ textarea{min-height:84px;resize:vertical}
   line-height:1;
 }
 .em-add{margin-top:7px;background:#dff4f1;color:#175e59}
-.em-remove{background:#fbe9e7;color:#9d2a20}
+.em-remove{background:#eef5f4;color:#17373d;border:1px solid #cfe4e0}
 .em-help{display:none;margin:6px 0 0;font-size:11px;color:#687a80;line-height:1.25}
 .em-field.um-active .em-help{display:block}
 .actions{
@@ -254,13 +257,13 @@ button{
   font-size:15px;
   cursor:pointer;
 }
-button.primary{background:var(--dark);color:#fff}
-button.primary:hover{background:#10191d}
-button.secondary{background:#e7eeee;color:#1f2a30}
-button.secondary:hover{background:#d7e4e4}
+button.primary{background:var(--blue);color:#fff}
+button.primary:hover{background:#2116a0}
+button.secondary{background:#e8f4f1;color:var(--blue)}
+button.secondary:hover{background:#d4ebe6}
 button.quick{
   background:#e9f7f5;
-  color:#17645f;
+  color:var(--blue);
   border:1px solid #b9e7e1;
   padding:8px 11px;
   font-size:13px;
@@ -283,9 +286,9 @@ button.quick{
 .checkline input{width:auto;transform:scale(1.15)}
 .checkline label{margin:0}
 .notice{
-  background:#fff7ed;
-  color:#7c2d12;
-  border:1px solid #fed7aa;
+  background:#edf5f9;
+  color:#0A0082;
+  border:1px solid #bcd7e1;
   border-radius:14px;
   padding:12px;
   margin-bottom:14px;
@@ -317,9 +320,27 @@ button.quick{
  #importStatus{font-size:13px;color:#17645f;line-height:1.4}#importStatus.error{color:#b42318}
  .import-button{background:#17645f;color:#fff;box-shadow:0 4px 12px rgba(23,100,95,.2);min-height:46px;white-space:normal}
  .import-button:hover{background:#104f4b}.import-button:disabled{opacity:.55;cursor:wait}
- .help-button{flex:none}.welcome-overlay{position:fixed;inset:0;z-index:1000100;background:rgba(20,35,40,.67);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
- .welcome-overlay[hidden]{display:none}.welcome-dialog{max-width:560px;width:100%;max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border-radius:22px;padding:25px;box-shadow:0 24px 70px rgba(0,0,0,.3)}
- .welcome-dialog h2{font-size:21px;margin:14px 0}.welcome-dialog p{font-size:14px;line-height:1.55;color:#34474d}.welcome-dialog button{width:100%;margin-top:10px}
+ .import-card{border-color:#a5d9d1;background:#fff}
+ .import-icon,.welcome-symbol{background:#e7f6f3;color:#005c50}
+ #importStatus{color:#005c50}
+ .import-button{background:#007D69;box-shadow:0 4px 12px rgba(0,125,105,.18)}
+ .import-button:hover{background:#005f52}
+ .actions{border-top:2px solid #64C3B9}
+ .sidebar-title{color:#0A0082}
+ .status-dot{background:#007D69}
+ .train-block{border-left:4px solid #64C3B9}
+ .train-block .row-title{color:#0A0082;gap:12px;flex-wrap:wrap}
+ .train-command{display:flex;justify-content:flex-end;margin:-2px 0 12px;padding-bottom:11px;border-bottom:1px solid #d5e9e5}
+ .train-delete{background:#e7f6f3;color:#0A0082;border:1px solid #64C3B9;padding:10px 14px;font-size:13px;line-height:1.25;box-shadow:0 2px 6px rgba(0,125,105,.08)}
+ .train-delete:hover{background:#d4eee9;border-color:#007D69}
+ .train-delete:focus-visible{outline:3px solid #64C3B9;outline-offset:2px}
+ @media(max-width:560px){.train-command .train-delete{width:100%}}
+ #importStatus.error{color:#0A0082;font-weight:700}
+ .help-button{flex:none;border:1px solid #64C3B9;background:#effaf8;color:#0A0082;font-weight:800}.help-button:hover{background:#dff4f0}
+ .welcome-overlay{position:fixed;inset:0;z-index:1000100;background:rgba(10,0,58,.64);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
+ .welcome-overlay[hidden]{display:none}.welcome-dialog{max-width:620px;width:100%;max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border:1px solid #b8ded9;border-radius:22px;padding:0;box-shadow:0 24px 70px rgba(10,0,82,.25)}
+ .welcome-head{background:#eff9f7;border-bottom:4px solid #64C3B9;padding:25px 28px 20px}.welcome-kicker{display:inline-block;color:#0A0082;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.welcome-dialog h2{font-size:23px;margin:9px 0;color:#0A0082;line-height:1.2}.welcome-lead{font-size:14px;line-height:1.5;margin:0;color:#334c52}.welcome-body{padding:18px 28px 26px}.welcome-step{display:flex;align-items:flex-start;gap:13px;padding:13px 0;border-bottom:1px solid #e2efed}.welcome-step:last-of-type{border-bottom:0}.welcome-emoji{font-size:22px;line-height:1.2;width:29px;flex:none;text-align:center}.welcome-step h3{font-size:15px;margin:0 0 4px;color:#0A0082}.welcome-step p{font-size:13px;line-height:1.45;color:#34474d;margin:0}.welcome-note{margin:14px 0 0;padding:12px 14px;background:#f2f8f7;border-left:4px solid #64C3B9;border-radius:8px;font-size:12px;line-height:1.5;color:#34474d}.welcome-dialog .welcome-close{width:100%;margin-top:18px;background:#0A0082;color:#fff;box-shadow:none}.welcome-dialog .welcome-close:hover{background:#2116a0}.welcome-dialog button:focus-visible,.help-button:focus-visible{outline:3px solid #64C3B9;outline-offset:3px}
+ @media(max-width:480px){.welcome-head{padding:20px}.welcome-body{padding:12px 20px 20px}.welcome-dialog h2{font-size:21px}}
  @media(max-width:760px){.import-card{flex-wrap:wrap}.import-button{width:100%}.actions{flex-wrap:wrap;padding:8px;gap:6px}.actions button{font-size:12px;padding:10px;flex:1}.actions #pdfBtn{flex-basis:100%}.wrap{padding-bottom:150px}.app-credit{margin-top:-128px;margin-bottom:155px}input,select,textarea{font-size:16px}}
 
 </style>
@@ -334,7 +355,7 @@ button.quick{
   <div class="header-inner">
     <div>
       <h1>Bulletin de Service Agent de Conduite</h1>
-      <small>VERSION 02.01</small>
+      <small>RATP Dev Normandie · Version 02.01</small>
     </div>
     <div class="status-pill"><span class="status-dot"></span><span id="globalCompletion">0 % complété</span></div>
   </div>
@@ -359,7 +380,7 @@ button.quick{
           <div id="importStatus" role="status" aria-live="polite">Aucun document chargé.</div>
         </div>
         <button type="button" class="import-button" id="importButton" onclick="byId('serviceFile').click()">Choisir un PDF ou une photo</button>
-        <button type="button" class="quick help-button" onclick="showWelcome()">Mode d’emploi</button>
+        <button type="button" class="quick help-button" onclick="showWelcome()">📖 Mode d’emploi</button>
         <input type="file" id="serviceFile" accept="application/pdf,.pdf,image/*" aria-label="Choisir une journée de service en PDF ou une photo" hidden>
       </section>
       <div class="notice" id="notice"></div>
@@ -6553,11 +6574,18 @@ button.quick{
 
 <div id="welcomeOverlay" class="welcome-overlay" role="presentation">
   <div class="welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeText">
-    <div class="welcome-symbol" aria-hidden="true">↥</div><h2 id="welcomeTitle">Bulletin de service · Version 02.01</h2>
-    <p id="welcomeText">Les journées de service détaillées téléchargées depuis le site peuvent être importées directement dans le BS au format PDF ou en photo. La première page est lue pour préremplir les informations disponibles.</p>
-    <p>Attention : la lecture peut comporter des erreurs. Vérifiez chaque donnée et complétez ou corrigez manuellement les champs manquants avant de générer votre bulletin. Les horaires réels sont à renseigner après le service.</p>
-    <p>Selon l’appareil et la messagerie utilisés, les boutons d’envoi du mail peuvent rencontrer des problèmes. Une correction est en cours.</p>
-    <button type="button" class="import-button" id="welcomeClose" onclick="closeWelcome()">J’ai compris</button>
+    <div class="welcome-head">
+      <span class="welcome-kicker">Guide de prise en main · Version 02.01</span>
+      <h2 id="welcomeTitle">Bienvenue dans le bulletin de service 👋</h2>
+      <p class="welcome-lead" id="welcomeText">Quelques étapes pour préparer et transmettre votre BS.</p>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-step"><span class="welcome-emoji" aria-hidden="true">📄</span><div><h3>1. Importez votre journée</h3><p>Chargez le PDF détaillé téléchargé depuis le site, ou une photo de sa première page. Les informations reconnues sont préremplies.</p></div></div>
+      <div class="welcome-step"><span class="welcome-emoji" aria-hidden="true">🔎</span><div><h3>2. Vérifiez les données</h3><p>La lecture automatique peut comporter des erreurs. Relisez chaque champ et corrigez ou complétez les informations manquantes.</p></div></div>
+      <div class="welcome-step"><span class="welcome-emoji" aria-hidden="true">🕒</span><div><h3>3. Complétez après le service</h3><p>Renseignez les horaires réels, puis téléchargez le PDF et préparez votre mail.</p></div></div>
+      <p class="welcome-note">✉️ Selon votre appareil et votre messagerie, l’ouverture du mail peut parfois rencontrer un problème. Une correction est en cours.</p>
+      <button type="button" class="import-button welcome-close" id="welcomeClose" onclick="closeWelcome()">Commencer</button>
+    </div>
   </div>
 </div>
 <div class="actions">
@@ -6598,7 +6626,7 @@ function renumberUMEngines(i){
  });
 }
 
-function addUMEngine(i,value=''){
+function addUMEngine(i,value='',focus=true){
  if(val(`t${i}_nat`)!=='UM')return;
  const container=byId(`t${i}_emInputs`);
  const row=document.createElement('div');
@@ -6611,7 +6639,7 @@ function addUMEngine(i,value=''){
  });
  container.appendChild(row);
  renumberUMEngines(i);
- row.querySelector('input').focus();
+  if(focus)row.querySelector('input').focus();
  updateCompletion();
 }
 
@@ -6628,7 +6656,7 @@ function updateTrainNature(i){
  field.querySelector('.em-add').hidden=!isUM;
 
  if(isUM){
-  while(container.querySelectorAll('.em-input-row').length<2) addUMEngine(i);
+   while(container.querySelectorAll('.em-input-row').length<2) addUMEngine(i,'',false);
  }else{
   container.querySelectorAll('.em-extra').forEach(row=>row.remove());
  }
@@ -6642,7 +6670,7 @@ function addTrainRows(){
   d.className='row-block train-block';
   if(i>1)d.classList.add('hidden');
   d.dataset.index=i;
-  d.innerHTML=`<div class="row-title">Train ${i}<span class="badge" id="trainBadge${i}">vide</span></div><div class="train-grid">
+   d.innerHTML=`<div class="row-title"><span id="trainLabel${i}">Train ${i}</span><span class="badge" id="trainBadge${i}">vide</span></div><div class="train-command"><button type="button" class="train-delete" onclick="removeTrain(${i})" aria-label="Supprimer le train ${i}">✕ Supprimer ce train</button></div><div class="train-grid">
   <div class="field"><label>Train n°</label><input id="t${i}_num"></div><div class="field"><label>De <span class="required-mark">*</span></label><input id="t${i}_de" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>À <span class="required-mark">*</span></label><input id="t${i}_a" list="garesList" autocomplete="off" placeholder="Choisir ou écrire une gare"></div><div class="field"><label>Via</label><input id="t${i}_via"></div><div class="field"><label>Evo dép.</label><input id="t${i}_evoDep" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>H dép. <span class="required-mark">*</span></label><input id="t${i}_hDep" type="time"></div>
   <div class="field"><label>H arr. <span class="required-mark">*</span></label><input id="t${i}_hArr" type="time"></div><div class="field"><label>Evo arr.</label><input id="t${i}_evoArr" type="number" min="0" step="1" inputmode="numeric" placeholder="En minutes"></div><div class="field"><label>Nat <span class="required-mark">*</span></label><select id="t${i}_nat" onchange="updateTrainNature(${i})"><option></option><option>T</option><option>UM</option></select><div class="quickbar"><button type="button" class="quick" onclick="setValue('t${i}_nat','T')">T</button><button type="button" class="quick" onclick="setValue('t${i}_nat','UM')">UM</button></div></div><div class="field em-field" id="t${i}_emField"><label class="em-label">EM <span class="required-mark">*</span></label><div class="em-inputs" id="t${i}_emInputs"><div class="em-input-row"><span class="em-number">1</span><input id="t${i}_em" placeholder="N° d'engin moteur"></div></div><button type="button" class="em-add" hidden onclick="addUMEngine(${i})">+ Ajouter un engin moteur</button><p class="em-help">Deux numéros minimum sont requis en UM.</p></div><div class="field"><label>Code de composition</label><select id="t${i}_codeCompo"><option value=""></option><option>T14C</option><option>T14N</option><option>B16C</option><option>T16C</option><option>E14N</option><option>V160</option><option>V140</option><option>V120</option><option>ME120</option><option>ME100</option><option>MA100</option><option>MA90</option><option>MA80</option></select></div><div class="field"><label>Poste</label><input id="t${i}_poste"></div><div class="field"><label>Obs</label><input id="t${i}_obs"></div><div class="checkline"><input id="t${i}_autre" type="checkbox"><label for="t${i}_autre">Autre Agt</label></div></div>`;
   zone.appendChild(d);
@@ -6664,6 +6692,38 @@ function showNextTrain(){
  if(hidden) hidden.classList.remove('hidden');
 }
 function showAllTrains(){document.querySelectorAll('.train-block').forEach(e=>e.classList.remove('hidden'))}
+const trainFieldSuffixes=['num','de','a','via','evoDep','hDep','hArr','evoArr','nat','em','codeCompo','poste','obs'];
+function captureTrain(i){
+ const fields=Object.fromEntries(trainFieldSuffixes.map(suffix=>[suffix,val(`t${i}_${suffix}`)]));
+ return {fields,engines:[...document.querySelectorAll(`#t${i}_emInputs .em-extra input`)].map(input=>input.value),autre:byId(`t${i}_autre`).checked,engineAuto:byId(`t${i}_em`).dataset.engineAuto||''};
+}
+function restoreTrain(i,train){
+ for(const suffix of trainFieldSuffixes)byId(`t${i}_${suffix}`).value=train?.fields[suffix]||'';
+ byId(`t${i}_autre`).checked=!!train?.autre;
+ byId(`t${i}_em`).dataset.engineAuto=train?.engineAuto||'';
+ byId(`t${i}_emInputs`).querySelectorAll('.em-extra').forEach(row=>row.remove());
+ updateTrainNature(i);
+ if(train?.fields.nat==='UM'){
+  const inputs=[...document.querySelectorAll(`#t${i}_emInputs .em-extra input`)];
+  train.engines.forEach((engine,index)=>{
+   if(index>=inputs.length)addUMEngine(i,'',false);
+   document.querySelectorAll(`#t${i}_emInputs .em-extra input`)[index].value=engine;
+  });
+ }
+}
+function removeTrain(i){
+ const row=document.querySelector(`.train-block[data-index="${i}"]`);
+ if(!row)return;
+ if(trainFilled(i)&&!confirm(`Supprimer le train ${i} et toutes ses informations ?`))return;
+ const remaining=[];
+ for(let index=1;index<=5;index++)if(index!==i&&trainFilled(index))remaining.push(captureTrain(index));
+ const visibleCount=Math.max(1,[...document.querySelectorAll('.train-block:not(.hidden)')].length-(row.classList.contains('hidden')?0:1),remaining.length);
+ for(let index=1;index<=5;index++){
+  restoreTrain(index,remaining[index-1]);
+  document.querySelector(`.train-block[data-index="${index}"]`).classList.toggle('hidden',index>visibleCount);
+ }
+ updateCompletion();
+}
 function showNextRegularite(){
  const hidden=[...document.querySelectorAll('.regularite-block.hidden')][0];
  if(hidden) hidden.classList.remove('hidden');
@@ -7197,9 +7257,9 @@ function showPdfBlockedMessage(missing){
  const notice=byId('notice');
  notice.innerHTML='Champs à vérifier avant envoi : '+missing.join(', ')+'. Le PDF peut être téléchargé ; complétez ces données avant l’envoi.';
  notice.classList.add('show');
- notice.style.background='#fef3f2';
- notice.style.color='#7a271a';
- notice.style.borderColor='#fecdca';
+ notice.style.background='#edf5f9';
+ notice.style.color='#0A0082';
+ notice.style.borderColor='#bcd7e1';
  notice.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -7265,9 +7325,9 @@ function generatePDFPrintFallback(error=null){
   ? `Le PDF n’a pas pu être généré : ${error.message||error}. Vous pouvez toujours utiliser le bouton « Préparer le mail ». `
   : 'Le module PDF n’a pas pu être chargé. Rechargez la page, ou utilisez le bouton « Préparer le mail ». ';
  notice.classList.add('show');
- notice.style.background='#fef3f2';
- notice.style.color='#7a271a';
- notice.style.borderColor='#fecdca';
+ notice.style.background='#edf5f9';
+ notice.style.color='#0A0082';
+ notice.style.borderColor='#bcd7e1';
 }
 
 function resetForm(){
@@ -7297,7 +7357,10 @@ function updateCompletion(){
  byId('obsCount').textContent=`${obs}/5`; byId('bObs').textContent=`${obs}/5`;
  byId('signalCount').textContent=`${sig}/11`; byId('bSig').textContent=`${sig}/11`;
 
- for(let i=1;i<=5;i++) byId(`trainBadge${i}`).textContent=trainFilled(i)?'rempli':'vide';
+  for(let i=1;i<=5;i++){
+   byId(`trainBadge${i}`).textContent=trainFilled(i)?'rempli':'vide';
+   byId(`trainLabel${i}`).textContent=`Train ${i}${val(`t${i}_num`).trim()?' · n° '+val(`t${i}_num`).trim():''}`;
+  }
  for(let i=1;i<=6;i++) byId(`regBadge${i}`).textContent=regFilled(i)?'rempli':'vide';
 
  const percent=Math.round(((infos/15)+(trains/5)+(regs/6)+(obs/5)+(sig/11))/5*100);
