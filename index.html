@@ -7071,14 +7071,15 @@ function downloadPdfBlob(blob,fileName){
 }
 
 let lastMailDraft=null;
+const BS_MAIL_RECIPIENT='bulletindeservicerdcn@ratpdev.com';
 
 function getMailDraft(fileName){
  const date=serviceDateFR() || new Date().toLocaleDateString('fr-FR');
  const sign=[val('prenom').trim(),val('nom').trim()].filter(Boolean).join(' ');
  return {
   subject:fileName,
-  to:loadPref('bs_mail_to',''),
-  cc:loadPref('bs_mail_cc',''),
+  to:BS_MAIL_RECIPIENT,
+  cc:'',
   body:`Bonjour,\n\nVoici mon BS du ${date}.\n\nCordialement${sign?',\n'+sign:'.'}`
  };
 }
@@ -7095,7 +7096,7 @@ function mailClientUrl(client,draft){
  const enc=encodeURIComponent;
  const subject=enc(draft.subject);
  const body=enc(draft.body.replace(/\r?\n/g,'\r\n'));
- const to=normalizeAddrs(draft.to),cc=normalizeAddrs(draft.cc);
+ const to=BS_MAIL_RECIPIENT,cc='';
  const addr=t=>enc(t).replace(/%40/g,'@').replace(/%2C/g,',');
  const q=pairs=>pairs.filter(p=>p[1]).map(p=>p[0]+'='+p[1]).join('&');
  const std=()=>q([['to',addr(to)],['cc',addr(cc)],['subject',subject],['body',body]]);
@@ -7183,7 +7184,7 @@ function showMailClientChooser(){
  const device=mailDeviceFamily();
  const d=lastMailDraft||{subject:'',body:''};
  const hasPdf=!!lastPdfBlob;
- const showShare=canSharePdf() && device!=='desktop';
+ const showShare=false; // Partage système désactivé : il ne permet pas de verrouiller le destinataire.
  const showEml=hasPdf && device==='desktop';
  const clients=[
   ['outlook-app',device==='desktop'?'Outlook (application par défaut)':'Outlook (application)'],
@@ -7207,8 +7208,9 @@ function showMailClientChooser(){
   <div role="dialog" aria-modal="true" aria-labelledby="mailChooserTitle" style="width:min(520px,100%);margin:auto;background:#fff;border-radius:20px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.28);color:#1f2a30;">
    <div id="mailChooserTitle" style="font-size:21px;font-weight:800;margin-bottom:6px;">Envoyer le bulletin de service</div>
    <div style="font-size:14px;color:#607077;margin-bottom:12px;line-height:1.45;">${hasPdf?'Le PDF est prêt.':'Aucun PDF généré pour l’instant : le mail sera préparé sans pièce jointe.'}</div>
-   <label style="${label}">Destinataire<input id="mailTo" type="text" inputmode="email" autocomplete="email" placeholder="adresse@exemple.fr" value="${esc(d.to||'')}" oninput="updateMailRecipients()" style="${field}"></label>
-   <label style="${label}">Copie (facultatif)<input id="mailCc" type="text" inputmode="email" autocomplete="off" placeholder="adresse@exemple.fr" value="${esc(d.cc||'')}" oninput="updateMailRecipients()" style="${field}"></label>
+   <div style="${label}">Destinataire</div>
+   <div style="${field}background:#f2f8f7;color:#17373d;font-weight:800;cursor:not-allowed;user-select:all;">${BS_MAIL_RECIPIENT}</div>
+   <div style="font-size:12px;color:#607077;line-height:1.4;margin:6px 0 10px;">Adresse verrouillée — aucune copie ni autre destinataire n’est ajouté par l’application.</div>
    <div style="background:#f5faf9;border:1px solid #d8e3e4;border-radius:12px;padding:10px 12px;font-size:13px;margin:10px 0 14px;line-height:1.45;">
     <div><b>Objet :</b> ${esc(d.subject||'')}</div>
     <div style="margin-top:6px;"><b>Message :</b><br>${esc(d.body||'').replace(/\n/g,'<br>')}</div>
@@ -7615,10 +7617,14 @@ function savePref(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function normalizeAddrs(t){return String(t||'').split(/[;,\s]+/).filter(Boolean).join(',');}
 
 function updateMailRecipients(){
- const to=byId('mailTo')?.value||'',cc=byId('mailCc')?.value||'';
- if(lastMailDraft){lastMailDraft.to=to;lastMailDraft.cc=cc;}
- savePref('bs_mail_to',to);savePref('bs_mail_cc',cc);
+ if(lastMailDraft){lastMailDraft.to=BS_MAIL_RECIPIENT;lastMailDraft.cc='';}
+ try{
+  localStorage.removeItem('bs_mail_to');
+  localStorage.removeItem('bs_mail_cc');
+ }catch(e){}
 }
+
+updateMailRecipients();
 
 function canSharePdf(){
  try{
@@ -7665,10 +7671,9 @@ async function buildEmlBlob(){
  const ascii=lastPdfName.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'_').replace(/["\\]/g,'_');
  const pdf64=wrap76(await blobToBase64(lastPdfBlob));
  const body64=wrap76(utf8b64(d.body.replace(/\r?\n/g,'\r\n')));
- const to=normalizeAddrs(d.to).replace(/,/g,', '),cc=normalizeAddrs(d.cc).replace(/,/g,', ');
+ const to=BS_MAIL_RECIPIENT,cc='';
  const lines=[];
- if(to) lines.push('To: '+to);
- if(cc) lines.push('Cc: '+cc);
+ lines.push('To: '+to);
  lines.push(
   'Subject: '+encodeMailHeader(d.subject),
   'X-Unsent: 1',
