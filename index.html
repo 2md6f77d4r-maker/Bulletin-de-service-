@@ -6591,7 +6591,7 @@ button.quick{
 <div class="actions">
   <button class="secondary" onclick="resetForm()">Réinitialiser</button>
   <button class="secondary" onclick="checkBeforePDF()">Vérifier</button>
-  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF et préparer le mail</button>
+  <button class="primary" id="pdfBtn" onclick="generatePDF()">Télécharger le PDF texte et préparer le mail</button>
   <button class="secondary" type="button" onclick="prepareMailOnly()">Préparer le mail</button>
 </div>
 
@@ -6945,6 +6945,112 @@ function createPdfHolder(){
  #pdfExportHolder .page:last-child{page-break-after:auto;break-after:auto;}
  </style>${body}`;
  return holder;
+}
+
+// Le bulletin imprimable est dessiné dans le PDF élément par élément :
+// couleurs, filets et texte restent des objets PDF, seuls les logos restent des images.
+async function createVectorPdf(holder){
+ const pages=[...holder.querySelectorAll('.page')];
+ if(!pages.length)throw new Error('Aucune page de bulletin à exporter.');
+ if(document.fonts?.ready)await document.fonts.ready;
+ await Promise.all([...holder.querySelectorAll('img')].map(img=>img.decode?.().catch(()=>{})||Promise.resolve()));
+ // html2pdf contient déjà jsPDF dans ce fichier autonome. On initialise une
+ // page temporaire, puis on remplace intégralement son contenu par les vecteurs.
+ const temporary=document.createElement('div');
+ temporary.style.cssText='width:2px;height:2px;background:white';
+ temporary.textContent=' ';
+ document.body.appendChild(temporary);
+ let pdf;
+ try{
+  pdf=await window.html2pdf().set({margin:0,html2canvas:{scale:1},jsPDF:{orientation:'landscape',unit:'mm',format:'a4'}}).from(temporary).toPdf().get('pdf');
+ }finally{temporary.remove()}
+ while(pdf.internal.getNumberOfPages()>1)pdf.deletePage(pdf.internal.getNumberOfPages());
+ pdf.addPage('a4','landscape');
+ pdf.deletePage(1); // Supprime aussi l'image temporaire utilisée pour initialiser jsPDF.
+ const a4w=297,a4h=210, marginX=8,marginY=8;
+ const transparent=c=>!c||c==='transparent'||c==='rgba(0, 0, 0, 0)'||c==='rgba(0,0,0,0)';
+ function rgb(value){
+  const v=String(value||'').match(/rgba?\((\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)/);
+  return v?[+v[1],+v[2],+v[3]]:null;
+ }
+ for(let index=0;index<pages.length;index++){
+  if(index)pdf.addPage('a4','landscape');
+  pdf.setPage(index+1);
+  const page=pages[index], origin=page.getBoundingClientRect();
+  const scale=281/origin.width;
+  const px=x=>marginX+(x-origin.left)*scale;
+  const py=y=>marginY+(y-origin.top)*scale;
+  const mm=x=>x*scale;
+  const inPage=r=>r.width>0&&r.height>0&&r.right>origin.left&&r.left<origin.right&&r.bottom>origin.top&&r.top<origin.bottom;
+  const elements=[page,...page.querySelectorAll('*')].filter(el=>inPage(el.getBoundingClientRect()));
+  // Les fonds sont peints avant tous les textes, comme dans le modèle HTML.
+  for(const el of elements){
+   const s=getComputedStyle(el), color=rgb(s.backgroundColor),r=el.getBoundingClientRect();
+   if(color&&!transparent(s.backgroundColor)){
+    pdf.setFillColor(...color);
+    pdf.rect(px(r.left),py(r.top),mm(r.width),mm(r.height),'F');
+   }
+  }
+  for(const el of elements){
+   const s=getComputedStyle(el),r=el.getBoundingClientRect();
+   for(const [edge,x1,y1,x2,y2] of [
+    ['Top',r.left,r.top,r.right,r.top],['Right',r.right,r.top,r.right,r.bottom],
+    ['Bottom',r.left,r.bottom,r.right,r.bottom],['Left',r.left,r.top,r.left,r.bottom]]){
+    const w=parseFloat(s['border'+edge+'Width']);
+    const type=s['border'+edge+'Style'];
+    if(!w||type==='none'||type==='hidden')continue;
+    pdf.setDrawColor(...(rgb(s['border'+edge+'Color'])||[0,0,0]));
+    pdf.setLineWidth(Math.max(0.08,mm(w)));
+    pdf.setLineDashPattern(type==='dashed'?[0.8,0.5]:[],0);
+    pdf.line(px(x1),py(y1),px(x2),py(y2));
+   }
+  }
+  pdf.setLineDashPattern([],0);
+  for(const img of page.querySelectorAll('img')){
+   const r=img.getBoundingClientRect();
+   if(!inPage(r)||!img.src)continue;
+   const format=/^data:image\/jpe?g/i.test(img.src)?'JPEG':'PNG';
+   const clipping=img.closest('.pdf-logo-wrap');
+   if(clipping){
+    const c=clipping.getBoundingClientRect();
+    pdf.saveGraphicsState();
+    pdf.rect(px(c.left),py(c.top),mm(c.width),mm(c.height));
+    pdf.clip();pdf.discardPath();
+   }
+   pdf.addImage(img.src,format,px(r.left),py(r.top),mm(r.width),mm(r.height));
+   if(clipping)pdf.restoreGraphicsState();
+  }
+  const walker=document.createTreeWalker(page,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+   if(!node.textContent.trim())continue;
+   const parent=node.parentElement,s=getComputedStyle(parent);
+   if(s.display==='none'||s.visibility==='hidden')continue;
+   const fontSize=parseFloat(s.fontSize)||12;
+   const family=/Times/i.test(s.fontFamily)?'times':'helvetica';
+   const weight=parseInt(s.fontWeight,10)>=600||/bold/i.test(s.fontWeight);
+   const italic=/italic|oblique/i.test(s.fontStyle);
+   pdf.setFont(family,weight?(italic?'bolditalic':'bold'):(italic?'italic':'normal'));
+   pdf.setFontSize(fontSize*72/96);
+   pdf.setTextColor(...(rgb(s.color)||[17,17,17]));
+   const content=node.textContent,re=/\S+\s*|\s+/g;
+   let match;
+   while((match=re.exec(content))){
+    const str=match[0].trimEnd();
+    if(!str)continue;
+    const range=document.createRange();
+    range.setStart(node,match.index);
+    range.setEnd(node,match.index+str.length);
+    const rects=[...range.getClientRects()];
+    for(const r of rects){
+     if(!inPage(r))continue;
+     const baseline=r.top+Math.min(fontSize,r.height)*0.8;
+     pdf.text(str,px(r.left),py(baseline),{baseline:'alphabetic'});
+    }
+   }
+  }
+ }
+ return pdf.output('blob');
 }
 
 function dataUrlBytes(dataUrl){
@@ -7335,8 +7441,7 @@ async function generatePDF(){
   await new Promise(resolve=>setTimeout(resolve,300));
   if(btn) btn.textContent='Création et téléchargement du PDF...';
   const downloadedFileName=pdfFileName();
-  const pageImages=await renderPdfPages(holder);
-  const pdfBlob=createImagePdf(pageImages);
+  const pdfBlob=await createVectorPdf(holder);
   lastPdfBlob=pdfBlob;lastPdfName=downloadedFileName;
   if(pdfBlob.size<10000) throw new Error('Le PDF généré est anormalement vide.');
   downloadPdfBlob(pdfBlob,downloadedFileName);
@@ -7357,12 +7462,30 @@ async function generatePDF(){
  }
 }
 
+function printSelectablePdf(){
+ const frame=document.createElement('iframe');
+ frame.style.cssText='position:fixed;width:0;height:0;border:0;left:-10000px;top:0';
+ frame.setAttribute('title','Bulletin de service à enregistrer en PDF');
+ document.body.appendChild(frame);
+ const doc=frame.contentDocument;
+ doc.open();doc.write(buildPrintableHTML());doc.close();
+ const print=async()=>{
+  try{
+   if(doc.fonts?.ready)await doc.fonts.ready;
+   await Promise.all([...doc.images].map(img=>img.decode?.().catch(()=>{})||Promise.resolve()));
+   frame.contentWindow.focus();frame.contentWindow.print();
+  }catch(e){console.error(e);alert('Impossible d’ouvrir la fenêtre d’impression : '+(e.message||e))}
+  setTimeout(()=>frame.remove(),60000);
+ };
+ if(doc.readyState==='complete')print();else frame.onload=print;
+}
+
 function generatePDFPrintFallback(error=null){
  clearNoticeStyle();
  const notice=byId('notice');
- notice.textContent=error
-  ? `Le PDF n’a pas pu être généré : ${error.message||error}. Vous pouvez toujours utiliser le bouton « Préparer le mail ». `
-  : 'Le module PDF n’a pas pu être chargé. Rechargez la page, ou utilisez le bouton « Préparer le mail ». ';
+ notice.innerHTML=(error?'La génération automatique du PDF a échoué. ':'Le module PDF n’a pas pu être chargé. ')
+  +'Vous pouvez enregistrer un PDF avec du texte sélectionnable par la fenêtre d’impression : '
+  +'<button type="button" onclick="printSelectablePdf()" style="margin:8px;padding:8px 12px;border:1px solid #9bcfc8;border-radius:8px;background:#fff;color:#17645f;font-weight:700;cursor:pointer">Ouvrir l’impression PDF</button>';
  notice.classList.add('show');
  notice.style.background='#edf5f9';
  notice.style.color='#0A0082';
