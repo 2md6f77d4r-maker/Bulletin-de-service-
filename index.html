@@ -344,6 +344,19 @@ button.quick{
  @media(max-width:480px){.welcome-head{padding:20px}.welcome-body{padding:12px 20px 20px}.welcome-dialog h2{font-size:21px}}
  @media(max-width:760px){.import-card{flex-wrap:wrap}.import-button{width:100%}.actions{flex-wrap:wrap;padding:8px;gap:6px}.actions button{font-size:12px;padding:10px;flex:1}.actions #pdfBtn{flex-basis:100%}.wrap{padding-bottom:150px}.app-credit{margin-top:-128px;margin-bottom:155px}input,select,textarea{font-size:16px}}
 
+
+/* Alerte messagerie : contour rouge clignotant de la fenêtre d’accueil */
+.welcome-dialog{
+  border:3px solid #e02020;
+  animation:welcome-red-alert 1.25s ease-in-out infinite;
+}
+@keyframes welcome-red-alert{
+  0%,100%{border-color:#ec2626;box-shadow:0 0 0 2px rgba(236,38,38,.18),0 20px 65px rgba(10,0,82,.25)}
+  50%{border-color:#ff9999;box-shadow:0 0 0 7px rgba(236,38,38,.48),0 20px 65px rgba(10,0,82,.25)}
+}
+@media (prefers-reduced-motion:reduce){
+  .welcome-dialog{animation:none;border-color:#e02020;box-shadow:0 0 0 4px rgba(236,38,38,.22),0 20px 65px rgba(10,0,82,.25)}
+}
 </style>
 <script>
 /*! For license information please see html2pdf.bundle.min.js.LICENSE.txt */
